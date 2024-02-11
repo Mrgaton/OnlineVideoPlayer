@@ -69,8 +69,7 @@ namespace OnlineVideoPlayer
 
             if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower())
             {
-                    ArgsCalled = true;
-                
+                ArgsCalled = true;
             }
 
             if (GetConsoleWindow() != IntPtr.Zero)
@@ -153,9 +152,8 @@ namespace OnlineVideoPlayer
 
             if (!ArgsCalled && !CheckNet())
             {
-                    MessageBox.Show("Opaa parece que no estas conectado a ninguna red, conectate a una antes de utilizar el programa", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Environment.Exit(0);
-                
+                MessageBox.Show("Opaa parece que no estas conectado a ninguna red, conectate a una antes de utilizar el programa", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(0);
             }
 
             Application.EnableVisualStyles();
@@ -339,9 +337,9 @@ namespace OnlineVideoPlayer
             private static bool IsGenuineWindows()
             {
                 if (Environment.OSVersion.Version.Major < 6) return false;
-                
+
                 Guid windowsSlid = new Guid("55c92734-d682-4d71-983e-d6ec3f16059f");
-                
+
                 try
                 {
                     SL_GENUINE_STATE genuineState = SL_GENUINE_STATE.SL_GEN_STATE_LAST;
