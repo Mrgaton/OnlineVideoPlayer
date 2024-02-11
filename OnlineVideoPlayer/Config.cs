@@ -2,34 +2,32 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json;
 
 namespace OnlineVideoPlayer
 {
-    internal class Config
+    internal static class Config
     {
-        private static void WriteConfig(byte[] FileData) => File.WriteAllBytes(Program.VideoPlayerConfigPath, VideoPlayer.Compress(FileData));
+        private static void WriteConfig(byte[] fileData) => File.WriteAllBytes(Program.VideoPlayerConfigPath, VideoPlayer.Compress(fileData));
+
         private static byte[] ReadConfig() => VideoPlayer.Decompress(File.ReadAllBytes(Program.VideoPlayerConfigPath));
 
-        public static T GetConfig<T>(string KeyName, T DefaultValue = default)
+        public static T GetConfig<T>(string keyName, T defaultValue = default)
         {
             if (!File.Exists(Program.VideoPlayerConfigPath))
             {
-                return DefaultValue;
+                return defaultValue;
             }
 
             try
             {
                 var jsonObj = JsonNode.Parse(ReadConfig()).AsObject();
 
-                if (!jsonObj.Any(Key => Key.Key == KeyName))
-                {
-                    return DefaultValue;
-                }
+                if (!jsonObj.Any(Key => Key.Key == keyName)) return defaultValue;
 
-                return JsonSerializer.Deserialize<T>(jsonObj[KeyName].ToString(), JsonSerializerOptions);
+                return JsonSerializer.Deserialize<T>(jsonObj[keyName].ToString(), JsonSerializerOptions);
             }
             catch (Exception ex)
             {
@@ -43,7 +41,8 @@ namespace OnlineVideoPlayer
                 throw ex;
             }
         }
-        public static void SaveConfig(string KeyName, object ObjectData)
+
+        public static void SaveConfig(string keyName, object objectData)
         {
             if (!File.Exists(Program.VideoPlayerConfigPath))
             {
@@ -54,12 +53,9 @@ namespace OnlineVideoPlayer
             {
                 var jsonObj = JsonNode.Parse(ReadConfig()).AsObject();
 
-                if (jsonObj[KeyName] == null)
-                {
-                    jsonObj.Add(KeyName, "");
-                }
+                if (jsonObj[keyName] == null) jsonObj.Add(keyName, "");
 
-                jsonObj[KeyName] = JsonSerializer.Serialize(ObjectData, JsonSerializerOptions);
+                jsonObj[keyName] = JsonSerializer.Serialize(objectData, JsonSerializerOptions);
 
                 WriteConfig(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(jsonObj)));
             }
@@ -75,7 +71,6 @@ namespace OnlineVideoPlayer
                 throw ex;
             }
         }
-
 
         private static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions()
         {

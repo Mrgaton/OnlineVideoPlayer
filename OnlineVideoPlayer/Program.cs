@@ -1,17 +1,17 @@
 ﻿using System;
-using System.IO;
-using System.Management;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Diagnostics;
-using System.Windows.Forms;
-using System.Reflection;
-using System.Linq;
-using Application = System.Windows.Forms.Application;
-using System.Security.Principal;
-using System.Security.Cryptography;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Management;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Principal;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
 {
@@ -19,7 +19,7 @@ namespace OnlineVideoPlayer
     {
         [DllImport("user32.dll")] private static extern bool SetProcessDPIAware();
 
-        public static string Arguments = string.Join(", ", Environment.GetCommandLineArgs());
+        public static string arguments = string.Join(", ", Environment.GetCommandLineArgs());
         public static bool ArgsCalled = false;
         public static string ConfigPath;
 
@@ -33,32 +33,32 @@ namespace OnlineVideoPlayer
         public static string TemporaryFilesExtension = ".tmp";
         public static string ProgramVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
-        public static string VideoPlayerConfigPath = Program.Arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetSHA256Hash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
+        public static string VideoPlayerConfigPath = Program.arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetSHA256Hash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
 
-        public static string TempPath = Path.GetTempPath();
+        public static string tempPath = Path.GetTempPath();
 
         [STAThread]
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             WindowsModificationsDetector.CheckWindows();
 
             if (Environment.OSVersion.Version.Major >= 6) SetProcessDPIAware();
 
-            foreach (string Path in args)
+            foreach (string path in args)
             {
-                if (File.Exists(Path))
+                if (File.Exists(path))
                 {
-                    ConfigPath = Path;
+                    ConfigPath = path;
                 }
             }
 
             if (string.IsNullOrWhiteSpace(ConfigPath))
             {
-                string OtherPath = Arguments.Split(' ').Last();
+                string otherPath = arguments.Split(' ').Last();
 
-                if (File.Exists(OtherPath) | Helper.IsHttpsLink(OtherPath))
+                if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath))
                 {
-                    ConfigPath = OtherPath.Trim();
+                    ConfigPath = otherPath.Trim();
                 }
             }
 
@@ -67,15 +67,11 @@ namespace OnlineVideoPlayer
                 Directory.SetCurrentDirectory(new FileInfo(ConfigPath).Directory.FullName);
             }
 
-            if (!string.IsNullOrWhiteSpace(ConfigPath))
+            if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower())
             {
-                if (ConfigPath.ToLower() != CurrentFilePath.ToLower())
-                {
                     ArgsCalled = true;
-                }
+                
             }
-
-
 
             if (GetConsoleWindow() != IntPtr.Zero)
             {
@@ -100,46 +96,44 @@ namespace OnlineVideoPlayer
                 }
             }
 
-            string WindowsMediaPlayerPath = Path.Combine(Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86), "Windows Media Player");
+            string windowsMediaPlayerPath = Path.Combine(Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86), "Windows Media Player");
 
-            if (!Directory.Exists(WindowsMediaPlayerPath) | !File.Exists(Path.Combine(WindowsMediaPlayerPath, "wmplayer.exe")))
+            if (!Directory.Exists(windowsMediaPlayerPath) || !File.Exists(Path.Combine(windowsMediaPlayerPath, "wmplayer.exe")))
             {
-                if (Arguments.Contains("/WMPInstalled"))
+                if (arguments.Contains("/WMPInstalled"))
                 {
                     MessageBox.Show("Al parecer Windows Media Player no se instalo correctamente y el programa no se puede ejecutar :C\n\nIntenta ejecutar el comando 'sfc /scannow' en el cmd con administrador", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     Environment.Exit(1);
                 }
 
+                DialogResult result = MessageBox.Show("No se encontro Windows Media player que es necesario para usar el programa quieres instalarlo?\n\nLa instalacion puede tardara unos minutos", Application.ProductName, MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
 
-                DialogResult Resultado = MessageBox.Show("No se encontro Windows Media player que es necesario para usar el programa quieres instalarlo?\n\nLa instalacion puede tardara unos minutos", Application.ProductName, MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
-
-                if (Resultado == DialogResult.OK)
+                if (result == DialogResult.OK)
                 {
-                    ProcessStartInfo info = new ProcessStartInfo(Encoding.UTF8.GetString(new byte[] { 0x70, 0X6F, 0X77, 0X65, 0X72, 0X73, 0X68, 0X65, 0X6C, 0X6C, 0X2E, 0X65, 0X78, 0X65 }));
+                    ProcessStartInfo info = new ProcessStartInfo(Encoding.UTF8.GetString([0x70, 0X6F, 0X77, 0X65, 0X72, 0X73, 0X68, 0X65, 0X6C, 0X6C, 0X2E, 0X65, 0X78, 0X65]));
                     info.UseShellExecute = false;
                     info.Verb = "runas";
                     info.CreateNoWindow = false;
                     info.WindowStyle = ProcessWindowStyle.Normal;
-                    info.Arguments = Encoding.UTF8.GetString(new byte[] { 0x2D, 0X4E, 0X6F, 0X4C, 0X6F, 0X67, 0X6F, 0X20, 0X2D, 0X4E, 0X6F, 0X6E, 0X49, 0X6E, 0X74, 0X65, 0X72, 0X61, 0X63, 0X74, 0X69, 0X76, 0X65, 0X20, 0X2D, 0X4E, 0X6F, 0X50, 0X72, 0X6F, 0X66, 0X69, 0X6C, 0X65, 0X20, 0X2D, 0X45, 0X78, 0X65, 0X63, 0X75, 0X74, 0X69, 0X6F, 0X6E, 0X50, 0X6F, 0X6C, 0X69, 0X63, 0X79, 0X20, 0X42, 0X79, 0X70, 0X61, 0X73, 0X73, 0X20, 0X2D, 0X45, 0X6E, 0X63, 0X6F, 0X64, 0X65, 0X64, 0X43, 0X6F, 0X6D, 0X6D, 0X61, 0X6E, 0X64 }) + " " + Convert.ToBase64String(Encoding.Unicode.GetBytes("$host.ui.RawUI.WindowTitle='Instalando Windows media player';$pshost=Get-Host;$pswindow=$pshost.UI.RawUI;$newsize=$pswindow.BufferSize;$newsize.width=150;$pswindow.buffersize=$newsize;$newsize=$pswindow.windowsize;$newsize.width=150;$newsize.height=9;$pswindow.windowsize = $newsize;Enable-WindowsOptionalFeature –FeatureName \"WindowsMediaPlayer\" -All -Online"));
+                    info.Arguments = Encoding.UTF8.GetString("-NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -EncodedCommand"u8.ToArray()) + " " + Convert.ToBase64String(Encoding.Unicode.GetBytes("$host.ui.RawUI.WindowTitle='Instalando Windows media player';$pshost=Get-Host;$pswindow=$pshost.UI.RawUI;$newsize=$pswindow.BufferSize;$newsize.width=150;$pswindow.buffersize=$newsize;$newsize=$pswindow.windowsize;$newsize.width=150;$newsize.height=9;$pswindow.windowsize = $newsize;Enable-WindowsOptionalFeature –FeatureName \"WindowsMediaPlayer\" -All -Online"));
 
-                    Process DismProcess = Process.Start(info);
+                    Process dismProcess = Process.Start(info);
 
+                    dismProcess.WaitForExit();
 
-                    DismProcess.WaitForExit();
-
-                    if (DismProcess.ExitCode == 0)
+                    if (dismProcess.ExitCode == 0)
                     {
-                        DialogResult SegundoResultado = MessageBox.Show("Se instalo la caracteristica correctamente las carracteristicas quieres reiniciar?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                        DialogResult secondResult = MessageBox.Show("Se instalo la caracteristica correctamente las carracteristicas quieres reiniciar?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
-                        if (SegundoResultado == DialogResult.Yes)
+                        if (secondResult == DialogResult.Yes)
                         {
                             Process.Start(CurrentFilePath, "/WMPInstalled");
 
                             Environment.Exit(0);
 
                             /*ProcessStartInfo RestartInfo = new ProcessStartInfo("shutdown.exe");
-                            RestartInfo.Arguments = "/r /f /t 5 /c \"Instalando caracteristicas\"";
+                            RestartInfo.arguments = "/r /f /t 5 /c \"Instalando caracteristicas\"";
                             RestartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                             RestartInfo.CreateNoWindow = true;
 
@@ -157,16 +151,12 @@ namespace OnlineVideoPlayer
                 Environment.Exit(1);
             }
 
-
-            if (!ArgsCalled)
+            if (!ArgsCalled && !CheckNet())
             {
-                if (!CheckNet())
-                {
                     MessageBox.Show("Opaa parece que no estas conectado a ninguna red, conectate a una antes de utilizar el programa", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Environment.Exit(0);
-                }
+                
             }
-
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -175,9 +165,10 @@ namespace OnlineVideoPlayer
 
         public static string GetSHA256Hash(byte[] Data)
         {
-            using (SHA256 DigestAlgorithm = SHA256.Create())
+            using (SHA256 digestAlgorithm = SHA256.Create())
             {
-                byte[] bytes = DigestAlgorithm.ComputeHash(Data);
+                byte[] bytes = digestAlgorithm.ComputeHash(Data);
+
                 StringBuilder builder = new StringBuilder();
 
                 for (int i = 0; i < bytes.Length; i++)
@@ -189,28 +180,22 @@ namespace OnlineVideoPlayer
             }
         }
 
+        [DllImport("kernel32.dll")] private static extern IntPtr GetConsoleWindow();
 
+        [DllImport("wininet.dll")] private static extern bool InternetGetConnectedState(out int Description, int ReservedValue);
 
-        [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
-        [DllImport("wininet.dll")] private extern static bool InternetGetConnectedState(out int Description, int ReservedValue);
-        public static bool CheckNet()
-        {
-            return InternetGetConnectedState(out int s, 0);
-        }
-
-
+        public static bool CheckNet() => InternetGetConnectedState(out int s, 0);
 
         public class WindowsModificationsDetector
         {
             [DllImport("kernel32.dll")]
-            static extern int ResumeThread(IntPtr hThread);
+            private static extern int ResumeThread(IntPtr hThread);
 
             [DllImport("kernel32.dll")]
-            static extern int SuspendThread(IntPtr hThread);
+            private static extern int SuspendThread(IntPtr hThread);
 
             [DllImport("kernel32.dll")]
-            static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
-
+            private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
             [Flags]
             public enum ThreadAccess : int
@@ -228,34 +213,31 @@ namespace OnlineVideoPlayer
 
             public static void FreezeThreads()
             {
-                int CurrentThreathId = AppDomain.GetCurrentThreadId();
+                int currentThreathId = AppDomain.GetCurrentThreadId();
 
                 foreach (ProcessThread pT in Program.CurrentProcess.Threads)
                 {
-                    if (pT.Id != CurrentThreathId)
+                    if (pT.Id != currentThreathId)
                     {
                         IntPtr ptrOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
 
-                        if (ptrOpenThread == null)
-                        {
-                            break;
-                        }
+                        if (ptrOpenThread == null) break;
 
                         SuspendThread(ptrOpenThread);
                     }
                 }
             }
 
-
-            public static bool GetElement(ManagementObject bdcObject, uint Type, out System.Management.ManagementBaseObject Element)
+            public static bool GetElement(ManagementObject bdcObject, uint Type, out ManagementBaseObject element)
             {
-                System.Management.ManagementBaseObject inParams = null;
+                ManagementBaseObject inParams = null;
                 inParams = bdcObject.GetMethodParameters("GetElement");
-                inParams["Type"] = ((uint)(Type));
-                System.Management.ManagementBaseObject outParams = bdcObject.InvokeMethod("GetElement", inParams, null);
-                Element = ((System.Management.ManagementBaseObject)(outParams.Properties["Element"].Value));
-                return System.Convert.ToBoolean(outParams.Properties["ReturnValue"].Value);
+                inParams["Type"] = Type;
+                ManagementBaseObject outParams = bdcObject.InvokeMethod("GetElement", inParams, null);
+                element = (ManagementBaseObject)(outParams.Properties["element"].Value);
+                return Convert.ToBoolean(outParams.Properties["ReturnValue"].Value);
             }
+
             private enum SL_GENUINE_STATE
             {
                 SL_GEN_STATE_IS_GENUINE = 0,
@@ -263,50 +245,47 @@ namespace OnlineVideoPlayer
                 SL_GEN_STATE_TAMPERED = 2,
                 SL_GEN_STATE_LAST = 3
             }
+
             [DllImportAttribute("Slwga.dll", EntryPoint = "SLIsGenuineLocal", CharSet = CharSet.None, ExactSpelling = false, SetLastError = false, PreserveSig = true, CallingConvention = CallingConvention.Winapi, BestFitMapping = false, ThrowOnUnmappableChar = false)]
-            [PreserveSigAttribute()]
-            static extern uint SLIsGenuineLocal(ref Guid slid, [In, Out] ref SL_GENUINE_STATE genuineState, IntPtr val3);
+            [PreserveSigAttribute()] private static extern uint SLIsGenuineLocal(ref Guid slid, [In, Out] ref SL_GENUINE_STATE genuineState, IntPtr val3);
 
             private static bool Detected = false;
+
             public static void CheckWindows() => Task.Factory.StartNew(() =>
             {
-                string ProgramGuid = ((GuidAttribute)Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(GuidAttribute), false)).Value.ToUpper();
+                string programGuid = ((GuidAttribute)Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(GuidAttribute), false)).Value.ToUpper();
 
-                string BootPartDescription = string.Empty;
+                string bootPartDescription = string.Empty;
 
                 try
                 {
-                    string SavedDataProphilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "bcdntdt.bin");
+                    string savedDataProphilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "bcdntdt.bin");
 
-                    if (!File.Exists(SavedDataProphilePath))
+                    if (!File.Exists(savedDataProphilePath))
                     {
                         ManagementScope managementScope = new ManagementScope(@"root\WMI", new ConnectionOptions() { Impersonation = ImpersonationLevel.Impersonate, EnablePrivileges = false });
 
-                        ManagementObject privateLateBoundObject = new ManagementObject(managementScope, new ManagementPath("root\\WMI:BcdObject.Id=\"{fa926493-6f1c-4193-a414-58f0b2456d1e}\",StoreFilePath=\"\""), null);
+                        ManagementObject privateLateBoundObject = new ManagementObject(managementScope, new ManagementPath("root\\WMI:bcdObject.Id=\"{fa926493-6f1c-4193-a414-58f0b2456d1e}\",StoreFilePath=\"\""), null);
 
-                        ManagementObject BcdObject = new ManagementObject(managementScope, new ManagementPath("root\\WMI:BcdObject.Id=\"" + privateLateBoundObject.GetPropertyValue("Id") + "\",StoreFilePath=''"), null);
+                        ManagementObject bcdObject = new ManagementObject(managementScope, new ManagementPath("root\\WMI:bcdObject.Id=\"" + privateLateBoundObject.GetPropertyValue("Id") + "\",StoreFilePath=''"), null);
 
-                        bool getDescripStatus = GetElement(BcdObject, 0x12000004, out ManagementBaseObject Element);
+                        bool getDescripStatus = GetElement(bcdObject, 0x12000004, out ManagementBaseObject element);
 
-                        if (!getDescripStatus)
-                        {
-                            throw new Exception("Canot access bcdedit info");
-                        }
+                        if (!getDescripStatus) throw new Exception("Canot access bcdedit info");
 
+                        bootPartDescription = element.GetPropertyValue("String").ToString();
 
-                        BootPartDescription = Element.GetPropertyValue("String").ToString();
-
-                        File.WriteAllBytes(SavedDataProphilePath, ProtectedData.Protect(Encoding.UTF8.GetBytes(BootPartDescription), Encoding.UTF8.GetBytes(ProgramGuid), DataProtectionScope.CurrentUser));
+                        File.WriteAllBytes(savedDataProphilePath, ProtectedData.Protect(Encoding.UTF8.GetBytes(bootPartDescription), Encoding.UTF8.GetBytes(programGuid), DataProtectionScope.CurrentUser));
                     }
                     else
                     {
                         try
                         {
-                            BootPartDescription = Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(SavedDataProphilePath), Encoding.UTF8.GetBytes(ProgramGuid), DataProtectionScope.CurrentUser));
+                            bootPartDescription = Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(savedDataProphilePath), Encoding.UTF8.GetBytes(programGuid), DataProtectionScope.CurrentUser));
                         }
                         catch
                         {
-                            File.Delete(SavedDataProphilePath);
+                            File.Delete(savedDataProphilePath);
 
                             Application.Restart();
 
@@ -316,27 +295,24 @@ namespace OnlineVideoPlayer
 
                     try
                     {
-                        File.SetAttributes(SavedDataProphilePath, FileAttributes.Hidden | FileAttributes.System);
+                        File.SetAttributes(savedDataProphilePath, FileAttributes.Hidden | FileAttributes.System);
                     }
                     catch { }
 
-                    if (BootPartDescription.ToLower().Contains("kernel") | BootPartDescription.ToLower().Contains("atlas"))
-                    {
-                        Detected = true;
-                    }
+                    if (bootPartDescription.ToLower().Contains("kernel") || bootPartDescription.ToLower().Contains("atlas")) Detected = true;
                 }
                 catch
                 {
-                    if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)))
+                    if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
                     {
                         try
                         {
-                            Process ProcessElevatorUac = new Process();
-                            ProcessElevatorUac.StartInfo.FileName = CurrentFilePath;
-                            ProcessElevatorUac.StartInfo.Arguments = Arguments.Replace(CurrentFilePath, "");
-                            ProcessElevatorUac.StartInfo.UseShellExecute = true;
-                            ProcessElevatorUac.StartInfo.Verb = "runas";
-                            ProcessElevatorUac.Start();
+                            Process processElevatorUac = new Process();
+                            processElevatorUac.StartInfo.FileName = CurrentFilePath;
+                            processElevatorUac.StartInfo.Arguments = arguments.Replace(CurrentFilePath, "");
+                            processElevatorUac.StartInfo.UseShellExecute = true;
+                            processElevatorUac.StartInfo.Verb = "runas";
+                            processElevatorUac.Start();
                             Environment.Exit(0);
                         }
                         catch
@@ -348,10 +324,7 @@ namespace OnlineVideoPlayer
                     }
                 }
 
-                if (!IsGenuineWindows())
-                {
-                    Detected = true;
-                }
+                if (!IsGenuineWindows()) Detected = true;
 
                 if (Detected)
                 {
@@ -362,14 +335,13 @@ namespace OnlineVideoPlayer
                     Environment.Exit(9);
                 }
             });
+
             private static bool IsGenuineWindows()
             {
-                if (Environment.OSVersion.Version.Major < 6)
-                {
-                    return false;
-                }
-
+                if (Environment.OSVersion.Version.Major < 6) return false;
+                
                 Guid windowsSlid = new Guid("55c92734-d682-4d71-983e-d6ec3f16059f");
+                
                 try
                 {
                     SL_GENUINE_STATE genuineState = SL_GENUINE_STATE.SL_GEN_STATE_LAST;
@@ -384,8 +356,5 @@ namespace OnlineVideoPlayer
                 return false;
             }
         }
-
-
-
     }
 }

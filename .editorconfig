@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# S6608: Prefer indexing instead of "Enumerable" methods on types implementing "IList"
+dotnet_diagnostic.S6608.severity = none

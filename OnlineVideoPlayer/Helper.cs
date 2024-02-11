@@ -3,20 +3,22 @@ using System.Text.RegularExpressions;
 
 namespace OnlineVideoPlayer
 {
-    internal class Helper
+    internal static class Helper
     {
-        public static bool IsHttpsLink(string Link)
+        public static bool IsHttpsLink(string link)
         {
-            if (Link == null) return false;
+            if (link == null) return false;
 
-            return (Link.ToLower().StartsWith("http") & Link.ToLower().Contains("://"));
+            return link.ToLower().StartsWith("http") && link.ToLower().Contains("://");
         }
-        public static bool IsYoutubeLink(string Link)
+
+        public static bool IsYoutubeLink(string link)
         {
-            if (Link == null) return false;
+            if (link == null) return false;
 
-            return IsHttpsLink(Link) & Link.Contains("youtu") & (Link.Contains(".com") | Link.Contains(".be"));
+            return IsHttpsLink(link) && link.Contains("youtu") && (link.Contains(".com") || link.Contains(".be"));
         }
+
         public static string Removeillegal(string var)
         {
             return new Regex(string.Format("[{0}]", Regex.Escape(new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars())))).Replace(var, "");

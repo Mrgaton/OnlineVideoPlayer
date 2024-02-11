@@ -226,7 +226,7 @@
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
+  <data name="$this.text" xml:space="preserve">
     <value>Conectando al servidor</value>
   </data>
   <data name="&gt;&gt;MetaDataTimer.Name" xml:space="preserve">
