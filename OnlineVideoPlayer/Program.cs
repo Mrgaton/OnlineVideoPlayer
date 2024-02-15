@@ -1,17 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Management;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Application = System.Windows.Forms.Application;
+﻿using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
 {
@@ -56,10 +43,7 @@ namespace OnlineVideoPlayer
             {
                 string otherPath = arguments.Split(' ').Last();
 
-                if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath))
-                {
-                    ConfigPath = otherPath.Trim();
-                }
+                if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath))ConfigPath = otherPath.Trim();
             }
 
             if (!string.IsNullOrWhiteSpace(ConfigPath))
@@ -67,10 +51,8 @@ namespace OnlineVideoPlayer
                 Directory.SetCurrentDirectory(new FileInfo(ConfigPath).Directory.FullName);
             }
 
-            if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower())
-            {
-                ArgsCalled = true;
-            }
+            if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower()) ArgsCalled = true;
+            
 
             if (GetConsoleWindow() != IntPtr.Zero)
             {
@@ -85,14 +67,7 @@ namespace OnlineVideoPlayer
                 Console.WriteLine("Iniciando programa version " + typeof(string).Assembly.ImageRuntimeVersion);
                 Console.Write("Programa ejecutado ");
 
-                if (Environment.Is64BitProcess)
-                {
-                    Console.WriteLine("x64");
-                }
-                else
-                {
-                    Console.WriteLine("x32");
-                }
+                Console.WriteLine(Environment.Is64BitProcess ? "x64" : "x32");
             }
 
             string windowsMediaPlayerPath = Path.Combine(Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86), "Windows Media Player");

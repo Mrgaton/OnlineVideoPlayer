@@ -1,27 +1,4 @@
-﻿using Microsoft.Win32;
-using OnlineVideoPlayer.Properties;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Media;
-using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json.Nodes;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
-using System.Windows.Forms;
-using System.Windows.Input;
-using YoutubeExplode;
-using YoutubeExplode.Videos;
-using YoutubeExplode.Videos.Streams;
+﻿using OnlineVideoPlayer.Properties;
 using Application = System.Windows.Forms.Application;
 using Image = System.Drawing.Image;
 
@@ -29,13 +6,12 @@ namespace OnlineVideoPlayer
 {
     public partial class VideoPlayer : Form
     {
-        public static WebClient Web = new WebClient();
 
         private static string DownloadName = "Pensando {0}";
 
         private static Size originalSize;
 
-        private static string ServerUrl = "https://FristServerOVP.onlinevideopyr.repl.co/OKIPULLUP/MainData.OVP";
+        private static string ServerUrl = "https://gato.ovh/programs/ovp/main.OVP";
 
         private static bool ConectionToHerededServer = false;
         private static bool HerededServer = false;
@@ -826,7 +802,7 @@ namespace OnlineVideoPlayer
 
                 int[] icons = [];
 
-                foreach (var a in IconList) icons = icons.Concat(new int[] { a.Value }).ToArray();
+                foreach (var a in IconList) icons = icons.Concat([a.Value]).ToArray();
 
                 if (icons.Length > 0)
                 {
@@ -855,11 +831,11 @@ namespace OnlineVideoPlayer
 
                         Task.Factory.StartNew(() =>
                         {
-                            WebClient VisitsWebClient = new WebClient();
+                            WebClient VisitsWebClientVisitsWebClient = new WebClient();
 
                             string APIUrl = "https://api.countapi.xyz";
 
-                            VideoVisits = (long)JsonNode.Parse(VisitsWebClient.DownloadString(APIUrl + "/hit/" + videoHash)).AsObject()["value"] - 1;
+                            VideoVisits = (long)JsonNode.Parse(visitsWebClient.DownloadString(APIUrl + "/hit/" + videoHash)).AsObject()["value"] - 1;
 
                             while (true)
                             {
@@ -872,7 +848,7 @@ namespace OnlineVideoPlayer
 
                                 try
                                 {
-                                    VideoVisits = (long)JsonNode.Parse(VisitsWebClient.DownloadString(APIUrl + "/get/" + videoHash)).AsObject()["value"] - 1;
+                                    VideoVisits = (long)JsonNode.Parse(visitsWebClient.DownloadString(APIUrl + "/get/" + videoHash)).AsObject()["value"] - 1;
                                 }
                                 catch { }
                             }
