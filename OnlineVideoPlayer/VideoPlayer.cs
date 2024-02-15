@@ -28,6 +28,8 @@ namespace OnlineVideoPlayer
 {
     public partial class VideoPlayer : Form
     {
+        [DllImport("winmm.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)] private static extern uint waveOutGetNumDevs();
+
         private static WebClient wc = new WebClient();
 
         private static string DownloadName = "Pensando {0}";
@@ -36,15 +38,13 @@ namespace OnlineVideoPlayer
 
         private static string ServerUrl = "https://gato.ovh/programs/ovp/main.OVP";
 
-        private static bool ConectionToHerededServer = false;
-        private static bool HerededServer = false;
-        private static string HerededServerUrl = "";
+        private bool ConectionToHerededServer = false;
+        private bool HerededServer = false;
+        private string HerededServerUrl = "";
 
         private static Random Rand = new Random();
 
         private int PlayerVolume = 60;
-
-        [DllImport("winmm.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)] private static extern uint waveOutGetNumDevs();
 
         public VideoPlayer()
         {
@@ -81,7 +81,7 @@ namespace OnlineVideoPlayer
 
                     byte[] iconData = null;
 
-                    string linkHash = internetUri ? Program.GetSHA256Hash(Encoding.Unicode.GetBytes(url)) : null;
+                    string linkHash = internetUri ? Program.GetHash(Encoding.Unicode.GetBytes(url)) : null;
                     string tempIconPath = internetUri ? Path.Combine(Program.tempPath, linkHash + Program.TemporaryFilesExtension) : null;
 
                     Console.WriteLine("Cambiando Icono a " + url);
@@ -489,7 +489,7 @@ namespace OnlineVideoPlayer
                                 {
                                     try
                                     {
-                                        if (bool.Parse(line.Trim().Split('=').Last()) == true && !Debugger.IsAttached)
+                                        if (bool.Parse(line.Trim().Split('=').Last()) && !Debugger.IsAttached)
                                         {
                                             WaitForPlayTimer.Enabled = false;
 
@@ -535,7 +535,7 @@ namespace OnlineVideoPlayer
                                             WaitForPlayTimer.Enabled = false;
                                         }
 
-                                        if (!(tiempoDeEspera.Minutes - 1 > 1))
+                                        if (tiempoDeEspera.Minutes - 1 <= 1)
                                         {
                                             PlayOnEnabled = true;
                                         }
@@ -617,11 +617,13 @@ namespace OnlineVideoPlayer
                 {
                     this.Text = "Procesando Playlists";
 
+                    void UpdateProgress() => this.Text = "Procesando Playlists " + playlistNum + "/" + playListsList.Count + "  " + newPlaylistVideos.Count + " Videos";
+
                     foreach (var PlayList in playListsList)
                     {
                         playlistNum++;
 
-                        this.Text = "Procesando Playlists " + playlistNum + "/" + playListsList.Count + "  " + newPlaylistVideos.Count + " Videos";
+                        UpdateProgress();
 
                         string listId = HttpUtility.ParseQueryString(new Uri(PlayList.Key).Query).Get("list");
 
@@ -631,7 +633,7 @@ namespace OnlineVideoPlayer
                             {
                                 newPlaylistVideos.Add(PlaylistVideo.Url, PlayList.Value);
 
-                                this.Text = "Procesando Playlists " + playlistNum + "/" + playListsList.Count + "  " + newPlaylistVideos.Count + " Videos";
+                                UpdateProgress();
                             }
                             catch { }
                         }
@@ -687,7 +689,7 @@ namespace OnlineVideoPlayer
                     {
                         chanelNum++;
 
-                        this.Text = "Procesando Canales " + chanelNum + "/" + channelVideosList.Count + "  " + newChannelVideos.Count + " Videos";
+                        this.Text = "Procesando Canales " + chanelNum + "/" + channelVideosList.Count + " " + newChannelVideos.Count + " Videos";
 
                         await foreach (var channelVideo in videosProcesor.Channels.GetUploadsAsync(chanel.Key))
                         {
@@ -695,7 +697,7 @@ namespace OnlineVideoPlayer
                             {
                                 newChannelVideos.Add(channelVideo.Url, chanel.Value);
 
-                                this.Text = "Procesando Canales " + chanelNum + "/" + channelVideosList.Count + "  " + newChannelVideos.Count + " Videos";
+                                this.Text = "Procesando Canales " + chanelNum + "/" + channelVideosList.Count + " " + newChannelVideos.Count + " Videos";
                             }
                             catch { }
                         }
@@ -732,6 +734,7 @@ namespace OnlineVideoPlayer
                             if (!string.IsNullOrWhiteSpace(SavedReproductedVideos))
                             {
                                 List<int> CheckerVideosPlayed = new List<int>();
+
                                 using (StringReader reader = new StringReader(SavedReproductedVideos.Replace("%", "\n")))
                                 {
                                     int checks = 1;
@@ -832,7 +835,7 @@ namespace OnlineVideoPlayer
                     ChangeFormIconFromUrl(videoIconUrl);
                 }
 
-                string videoHash = Program.GetSHA256Hash(Encoding.UTF8.GetBytes(VideoUrl));
+                string videoHash = Program.GetHash(Encoding.UTF8.GetBytes(VideoUrl));
                 string videoName = Program.ArgsCalled ? new FileInfo(VideoUrl).Name : VideoUrl.Split('/').Last().Replace("_", " ").Replace("%20", "").Trim();
 
                 IsRadio = videoName.ToLower().Trim().EndsWith(".mp3");
@@ -843,19 +846,14 @@ namespace OnlineVideoPlayer
                 {
                     string oldTitle = this.Text;
 
-                    try
+                    Task.Factory.StartNew(async () =>
                     {
-                        Task.Factory.StartNew(async () =>
-                        {
-                            WebClient visitsWebClient = new WebClient();
+                        WebClient visitsWebClient = new WebClient();
 
-                            string result = await visitsWebClient.DownloadStringTaskAsync("https://visitor-badge.laobi.icu/badge?page_id=" + videoHash);
+                        string result = await visitsWebClient.DownloadStringTaskAsync("https://visitor-badge.laobi.icu/badge?page_id=" + videoHash);
 
-                            long.TryParse(result.Split(new string[] { "</text><text" }, StringSplitOptions.None)[2].Split('>').Last(), out VideoVisits);
-                        });
-
-                    }
-                    catch { }
+                        long.TryParse(result.Split(new string[] { "</text><text" }, StringSplitOptions.None)[2].Split('>').Last(), out VideoVisits);
+                    });
 
                     this.Text = oldTitle;
                 }
@@ -996,9 +994,11 @@ namespace OnlineVideoPlayer
 
                 if (Registry.CurrentUser.OpenSubKey(registryPath, false) == null)
                 {
-                    RegistryKey playerOptionsReg = Registry.CurrentUser.CreateSubKey(registryPath);
-                    playerOptionsReg.SetValue("Permissions", "15", RegistryValueKind.DWord);
-                    playerOptionsReg.SetValue("Runtime", "6", RegistryValueKind.DWord);
+                    using (RegistryKey playerOptionsReg = Registry.CurrentUser.CreateSubKey(registryPath))
+                    {
+                        playerOptionsReg.SetValue("Permissions", "15", RegistryValueKind.DWord);
+                        playerOptionsReg.SetValue("Runtime", "6", RegistryValueKind.DWord);
+                    }
                 }
 
                 VideoPanel.Dock = DockStyle.Fill;
@@ -1017,7 +1017,7 @@ namespace OnlineVideoPlayer
                 GifPictureBox.Visible = false;
                 GifPictureBox.Image = null;
 
-                Task windowsSizerTask = Task.Factory.StartNew(() => Invoke(new MethodInvoker(() => SetWindowSize())));
+                Task.Factory.StartNew(() => Invoke(new MethodInvoker(() => SetWindowSize())));
 
                 this.Text = "Reproduciendo video";
 
@@ -1564,6 +1564,8 @@ namespace OnlineVideoPlayer
 
         private async void MetaDataTimer_Tick(object sender, EventArgs e)
         {
+            MetaDataTimer.Enabled = false;
+
             try
             {
                 string titleTextCreator = "";
@@ -1604,10 +1606,12 @@ namespace OnlineVideoPlayer
                 this.Text = titleTextCreator;
             }
             catch { }
+
+            MetaDataTimer.Enabled = true;
         }
 
         //Que pereza pensar y programar
-        private static double[] AverageDownloadSpeed = { 0 };
+        /*private static readonly double[] AverageDownloadSpeed = { 0 };
 
         private static Stopwatch Sw = new Stopwatch();
 
@@ -1628,15 +1632,16 @@ namespace OnlineVideoPlayer
                     AverageDownloadSpeed = AverageDownloadSpeed.Skip(1).ToArray();
                 }
             }*/
-
+        /*
             UpdateProgress((double)e.BytesReceived / (double)e.TotalBytesToReceive * 10000);
         }
+    */
 
-        public void client_DownloadProgressChanged(double NewProgress) => UpdateProgress(NewProgress * 10000);
+        public void client_DownloadProgressChanged(double newProgress) => UpdateProgress(newProgress * 10000);
 
-        public void UpdateProgress(double Porcentaje)
+        public void UpdateProgress(double porcentaje)
         {
-            string percentaje = ((int)Porcentaje).ToString();
+            string percentaje = ((int)porcentaje).ToString();
 
             if (int.Parse(percentaje) <= 9) percentaje = "0" + percentaje;
 

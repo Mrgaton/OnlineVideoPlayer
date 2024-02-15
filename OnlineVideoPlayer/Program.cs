@@ -19,21 +19,27 @@ namespace OnlineVideoPlayer
     {
         [DllImport("user32.dll")] private static extern bool SetProcessDPIAware();
 
+        private static MD5 hashAlg = MD5.Create();
+
         public static string arguments = string.Join(", ", Environment.GetCommandLineArgs());
+
         public static bool ArgsCalled = false;
+
         public static string ConfigPath;
 
         public static Process CurrentProcess = Process.GetCurrentProcess();
 
         private static string CurrentFilePath = Assembly.GetExecutingAssembly().Location;
-        private static string DirectorioDelEjecutable = AppDomain.CurrentDomain.BaseDirectory;
+
         private static string CurrentFileName = AppDomain.CurrentDomain.FriendlyName;
 
         public static Icon ProgramIco = Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
+
         public static string TemporaryFilesExtension = ".tmp";
+
         public static string ProgramVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
-        public static string VideoPlayerConfigPath = Program.arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetSHA256Hash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
+        public static string VideoPlayerConfigPath = Program.arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetHash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
 
         public static string tempPath = Path.GetTempPath();
 
@@ -148,21 +154,24 @@ namespace OnlineVideoPlayer
             Application.Run(new VideoPlayer());
         }
 
-        public static string GetSHA256Hash(byte[] Data)
+        public static string GetHash(byte[] Data) => ToHex(hashAlg.ComputeHash(Data));
+
+        private static char GetHexValue(int i) => (i < 10) ? ((char)(i + 48)) : ((char)(i - 10 + 65));
+
+        public static string ToHex(byte[] value)
         {
-            using (SHA256 digestAlgorithm = SHA256.Create())
+            int l = value.Length * 2;
+            char[] array = new char[l];
+            int i, di = 0;
+
+            for (i = 0; i < l; i += 2)
             {
-                byte[] bytes = digestAlgorithm.ComputeHash(Data);
-
-                StringBuilder builder = new StringBuilder();
-
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-
-                return builder.ToString();
+                byte b = value[di++];
+                array[i] = GetHexValue(b / 16);
+                array[i + 1] = GetHexValue(b % 16);
             }
+
+            return new string(array);
         }
 
         [DllImport("kernel32.dll")] private static extern IntPtr GetConsoleWindow();
