@@ -1,11 +1,35 @@
 ﻿using OnlineVideoPlayer.Properties;
+using System;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Linq;
 using Application = System.Windows.Forms.Application;
 using Image = System.Drawing.Image;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Text;
+using System.Net;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Threading;
+using System.Globalization;
+using YoutubeExplode.Videos;
+using System.Text.Json.Nodes;
+using System.IO.Compression;
+using System.Diagnostics;
+using System.Media;
+using Microsoft.Win32;
+using System.Reflection;
+using YoutubeExplode;
+using YoutubeExplode.Videos.Streams;
+using System.Web;
 
 namespace OnlineVideoPlayer
 {
     public partial class VideoPlayer : Form
     {
+        private static WebClient wc = new WebClient();
 
         private static string DownloadName = "Pensando {0}";
 
@@ -211,11 +235,11 @@ namespace OnlineVideoPlayer
 
                 DownloadProgressHandler = new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 
-                Web.DownloadProgressChanged += DownloadProgressHandler;
+                wc.DownloadProgressChanged += DownloadProgressHandler;
             }
             else
             {
-                Web.DownloadProgressChanged -= DownloadProgressHandler;
+                wc.DownloadProgressChanged -= DownloadProgressHandler;
             }
 
             try
@@ -242,7 +266,7 @@ namespace OnlineVideoPlayer
                             this.Text = "Conectandose al servidor ";
                         }
 
-                        serverData = await Web.DownloadStringTaskAsync(ServerUrl);
+                        serverData = await wc.DownloadStringTaskAsync(ServerUrl);
                     }
                     else
                     {
@@ -254,7 +278,7 @@ namespace OnlineVideoPlayer
                             this.Text = "Conectandose al servidor heredado ";
                         }
 
-                        serverData = await Web.DownloadStringTaskAsync(HerededServerUrl);
+                        serverData = await wc.DownloadStringTaskAsync(HerededServerUrl);
                     }
 
                     Console.WriteLine("Servidor conectado procesando informacion");
@@ -272,7 +296,7 @@ namespace OnlineVideoPlayer
 
                 string line;
 
-                int LineNum = 0;
+                int ln = 0;
 
                 FristTimeCheck = false;
 
@@ -280,7 +304,7 @@ namespace OnlineVideoPlayer
                 {
                     while ((line = reader.ReadLine()) != null)
                     {
-                        LineNum++;
+                        ln++;
 
                         line = line.Trim();
 
@@ -295,29 +319,29 @@ namespace OnlineVideoPlayer
                                     continue;
                                 }
 
-                                VideoList.Add(line, LineNum);
+                                VideoList.Add(line, ln);
                             }
 
                             if (!ConectionToHerededServer && Helper.IsHttpsLink(line) && line.ToLower().EndsWith(".exe") && !Program.ArgsCalled)
                             {
                                 if (!serverData.Contains(Program.ProgramVersion))
                                 {
-                                    UpdateProgram(line, Web);
+                                    UpdateProgram(line, wc);
 
                                     return;
                                 }
                             }
 
-                            string[] imageExtensions = { ".ico", ".png", ".jpg", ".jpeg", ".gif" };
+                            string[] imageExtensions = [".ico", ".png", ".jpg", ".jpeg", ".gif"];
 
-                            if (imageExtensions.Any(Ext => line.ToLower().EndsWith(Ext)))
+                            if (imageExtensions.Any(ext => line.ToLower().EndsWith(ext)))
                             {
                                 if (!Program.ArgsCalled && !Helper.IsHttpsLink(line))
                                 {
                                     continue;
                                 }
 
-                                IconList.Add(line, LineNum);
+                                IconList.Add(line, ln);
                             }
 
                             if (!ConectionToHerededServer && Helper.IsHttpsLink(line) && line.ToUpper().EndsWith(".OVP"))
@@ -831,7 +855,7 @@ namespace OnlineVideoPlayer
 
                         Task.Factory.StartNew(() =>
                         {
-                            WebClient VisitsWebClientVisitsWebClient = new WebClient();
+                            WebClient visitsWebClient = new WebClient();
 
                             string APIUrl = "https://api.countapi.xyz";
 
@@ -909,7 +933,7 @@ namespace OnlineVideoPlayer
 
                                 this.Text = "Descargando video";
 
-                                byte[] videoData = await Web.DownloadDataTaskAsync(new Uri(VideoUrl));
+                                byte[] videoData = await wc.DownloadDataTaskAsync(new Uri(VideoUrl));
 
                                 File.WriteAllBytes(videoDefaultPath, videoData);
 

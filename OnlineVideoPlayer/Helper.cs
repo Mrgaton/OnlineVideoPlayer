@@ -1,4 +1,7 @@
-﻿namespace OnlineVideoPlayer
+﻿using System.IO;
+using System.Text.RegularExpressions;
+
+namespace OnlineVideoPlayer
 {
     internal static class Helper
     {

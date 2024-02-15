@@ -1,4 +1,16 @@
-﻿using Application = System.Windows.Forms.Application;
+﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Management;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
 {
