@@ -62,7 +62,7 @@
     <StartupObject>OnlineVideoPlayer.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Player_Icon.ico</ApplicationIcon>
+    <ApplicationIcon>playButton.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -360,6 +360,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Flamingo.ico" />
+    <Content Include="playButton.ico" />
     <Content Include="Player_Icon.ico" />
     <None Include="Resources\SandClock.gif" />
     <None Include="Resources\Loading Big.gif" />
