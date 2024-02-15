@@ -8,7 +8,7 @@
     <ProjectGuid>{313EEA7C-0B2F-4068-8DB7-45BD94B7051C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>OnlineVideoPlayer</RootNamespace>
-    <AssemblyName>OK I PULL UP</AssemblyName>
+    <AssemblyName>OnlineVideoPlayer</AssemblyName>
     <LangVersion>preview</LangVersion>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -62,8 +62,7 @@
     <StartupObject>OnlineVideoPlayer.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>Player_Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>

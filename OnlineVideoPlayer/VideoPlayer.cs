@@ -1611,7 +1611,7 @@ namespace OnlineVideoPlayer
         }
 
         //Que pereza pensar y programar
-        /*private static readonly double[] AverageDownloadSpeed = { 0 };
+        private static readonly double[] AverageDownloadSpeed = { 0 };
 
         private static Stopwatch Sw = new Stopwatch();
 
@@ -1632,10 +1632,9 @@ namespace OnlineVideoPlayer
                     AverageDownloadSpeed = AverageDownloadSpeed.Skip(1).ToArray();
                 }
             }*/
-        /*
-            UpdateProgress((double)e.BytesReceived / (double)e.TotalBytesToReceive * 10000);
+
+            UpdateProgress((double)e.BytesReceived / e.TotalBytesToReceive * 10000);
         }
-    */
 
         public void client_DownloadProgressChanged(double newProgress) => UpdateProgress(newProgress * 10000);
 
