@@ -1,29 +1,28 @@
-﻿using OnlineVideoPlayer.Properties;
+﻿using Microsoft.Win32;
+using OnlineVideoPlayer.Properties;
 using System;
-using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Media;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using System.Windows.Forms;
+using System.Windows.Input;
+using YoutubeExplode;
+using YoutubeExplode.Videos;
+using YoutubeExplode.Videos.Streams;
 using Application = System.Windows.Forms.Application;
 using Image = System.Drawing.Image;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Text;
-using System.Net;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Threading;
-using System.Globalization;
-using YoutubeExplode.Videos;
-using System.Text.Json.Nodes;
-using System.IO.Compression;
-using System.Diagnostics;
-using System.Media;
-using Microsoft.Win32;
-using System.Reflection;
-using YoutubeExplode;
-using YoutubeExplode.Videos.Streams;
-using System.Web;
 
 namespace OnlineVideoPlayer
 {
@@ -43,7 +42,7 @@ namespace OnlineVideoPlayer
 
         private static Random Rand = new Random();
 
-        private static int PlayerVolume = 60;
+        private int PlayerVolume = 60;
 
         [DllImport("winmm.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)] private static extern uint waveOutGetNumDevs();
 
@@ -312,12 +311,9 @@ namespace OnlineVideoPlayer
                         {
                             string[] videoExtensions = { ".mp4", ".mp3", ".mov", ".webm", ".avi", ".wmv" };
 
-                            if (videoExtensions.Any(Ext => line.ToLower().EndsWith(Ext)) || Helper.IsYoutubeLink(line))
+                            if (videoExtensions.Any(ext => line.EndsWith(ext, StringComparison.InvariantCultureIgnoreCase)) || Helper.IsYoutubeLink(line))
                             {
-                                if (!Program.ArgsCalled && !Helper.IsHttpsLink(line))
-                                {
-                                    continue;
-                                }
+                                if (!Program.ArgsCalled && !Helper.IsHttpsLink(line)) continue;
 
                                 VideoList.Add(line, ln);
                             }
@@ -849,34 +845,15 @@ namespace OnlineVideoPlayer
 
                     try
                     {
-                        this.Text = "Obteniendo visitas del video";
-
-                        CancellationToken ct = realTimeVisitsTaskCancelToken.Token;
-
-                        Task.Factory.StartNew(() =>
+                        Task.Factory.StartNew(async () =>
                         {
                             WebClient visitsWebClient = new WebClient();
 
-                            string APIUrl = "https://api.countapi.xyz";
+                            string result = await visitsWebClient.DownloadStringTaskAsync("https://visitor-badge.laobi.icu/badge?page_id=" + videoHash);
 
-                            VideoVisits = (long)JsonNode.Parse(visitsWebClient.DownloadString(APIUrl + "/hit/" + videoHash)).AsObject()["value"] - 1;
+                            long.TryParse(result.Split(new string[] { "</text><text" }, StringSplitOptions.None)[2].Split('>').Last(), out VideoVisits);
+                        });
 
-                            while (true)
-                            {
-                                if (ct.IsCancellationRequested)
-                                {
-                                    ct.ThrowIfCancellationRequested();
-                                }
-
-                                Thread.Sleep(10000);
-
-                                try
-                                {
-                                    VideoVisits = (long)JsonNode.Parse(visitsWebClient.DownloadString(APIUrl + "/get/" + videoHash)).AsObject()["value"] - 1;
-                                }
-                                catch { }
-                            }
-                        }, realTimeVisitsTaskCancelToken.Token).Start();
                     }
                     catch { }
 

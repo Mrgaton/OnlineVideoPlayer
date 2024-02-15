@@ -7,6 +7,7 @@ using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -55,7 +56,7 @@ namespace OnlineVideoPlayer
             {
                 string otherPath = arguments.Split(' ').Last();
 
-                if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath))ConfigPath = otherPath.Trim();
+                if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath)) ConfigPath = otherPath.Trim();
             }
 
             if (!string.IsNullOrWhiteSpace(ConfigPath))
@@ -64,7 +65,6 @@ namespace OnlineVideoPlayer
             }
 
             if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower()) ArgsCalled = true;
-            
 
             if (GetConsoleWindow() != IntPtr.Zero)
             {

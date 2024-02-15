@@ -17,7 +17,6 @@ namespace OnlineVideoPlayer
         public static T GetConfig<T>(string keyName, T defaultValue = default)
         {
             if (!File.Exists(Program.VideoPlayerConfigPath)) return defaultValue;
-            
 
             try
             {
@@ -43,7 +42,6 @@ namespace OnlineVideoPlayer
         public static void SaveConfig(string keyName, object objectData)
         {
             if (!File.Exists(Program.VideoPlayerConfigPath)) File.WriteAllBytes(Program.VideoPlayerConfigPath, VideoPlayer.Compress(Encoding.UTF8.GetBytes("{\"test\":\"True\"}")));
-            
 
             try
             {
@@ -60,7 +58,7 @@ namespace OnlineVideoPlayer
                 Console.WriteLine(ex.ToString());
 
                 if (File.Exists(Program.VideoPlayerConfigPath)) File.Delete(Program.VideoPlayerConfigPath);
-                
+
                 throw ex;
             }
         }

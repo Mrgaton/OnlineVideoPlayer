@@ -1,6 +1,9 @@
 ﻿// La información general de un ensamblado se controla mediante el siguiente
 // conjunto de atributos. Cambie estos valores de atributo para modificar la información
 // asociada con un ensamblado.
+using System.Reflection;
+using System.Runtime.InteropServices;
+
 [assembly: AssemblyTitle("OnlineVideoPlayer")]
 [assembly: AssemblyDescription("Un bonito programa para reproducir videitos de forma random y automatica que puede estar preconfigurado para reproducir solo x contenido")]
 [assembly: AssemblyConfiguration("")]
@@ -30,4 +33,3 @@
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.4.6")]
 [assembly: AssemblyFileVersion("1.0.4.6")]
-[assembly: NeutralResourcesLanguage("es")]
