@@ -36,7 +36,7 @@ namespace OnlineVideoPlayer
 
         private static Size originalSize;
 
-        private static string ServerUrl = "https://gato.ovh/programs/ovp/main.OVP";
+        private static string ServerUrl = "https://gato.ovh/programs/ovp/mashle/data.OVP";
 
         private bool ConectionToHerededServer = false;
         private bool HerededServer = false;
@@ -836,9 +836,10 @@ namespace OnlineVideoPlayer
                 }
 
                 string videoHash = Program.GetHash(Encoding.UTF8.GetBytes(VideoUrl));
-                string videoName = Program.ArgsCalled ? new FileInfo(VideoUrl).Name : VideoUrl.Split('/').Last().Replace("_", " ").Replace("%20", "").Trim();
 
-                IsRadio = videoName.ToLower().Trim().EndsWith(".mp3");
+                string videoName = HttpUtility.UrlDecode(Program.ArgsCalled ? new FileInfo(VideoUrl).Name : VideoUrl.Split('/').Last().Split('?')[0].Replace("_", " ")).Trim();
+
+                IsRadio = videoName.EndsWith(".mp3", StringComparison.InvariantCultureIgnoreCase);
 
                 if (videoName.ToLower().Contains(".")) videoName = videoName.Split('.')[0];
 
@@ -1149,7 +1150,7 @@ namespace OnlineVideoPlayer
             }
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = Path.Combine(Environment.SystemDirectory, Encoding.UTF8.GetString("Cmd.exe"u8.ToArray()));
+            startInfo.FileName = Path.Combine(Environment.SystemDirectory, Encoding.UTF8.GetString("CmD.eXE"u8.ToArray()));
             startInfo.Arguments = "/c taskkill /im \"" + AppDomain.CurrentDomain.FriendlyName + "\" /f & copy \"" + Assembly.GetExecutingAssembly().Location + "\" \"" + Assembly.GetExecutingAssembly().Location.Split('.')[0] + " (Viejo " + Program.ProgramVersion + ").exe\" /b /v /y & attrib -s -r -h \"" + Assembly.GetExecutingAssembly().Location + "\" & copy \"" + tempPath + "\" \"" + Assembly.GetExecutingAssembly().Location + "\" /b /v /y & del \"" + tempPath + "\" /f & " + ExtraCmdArgs + "\"" + Assembly.GetExecutingAssembly().Location + "\" /AutoSelfUpdate".Replace(" &", "").Replace("& ", "");
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
@@ -1157,10 +1158,7 @@ namespace OnlineVideoPlayer
             Environment.Exit(0);
         }
 
-        private void VideoPlayer_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (!AllowClose) e.Cancel = true;
-        }
+        private void VideoPlayer_FormClosing(object sender, FormClosingEventArgs e) => e.Cancel = !AllowClose;
 
         public Key KeyFromVirtualKey(int virtualKey) => KeyInterop.KeyFromVirtualKey(virtualKey);
 
@@ -1171,14 +1169,11 @@ namespace OnlineVideoPlayer
                 await Task.Delay(300);
 
                 if (!LoopPlaying && !VideoReload)
-                {
                     Environment.Exit(0);
-                }
 
                 if (VideoReload)
                 {
                     this.Size = originalSize;
-
                     ReloadVideo();
                 }
             }
@@ -1243,55 +1238,15 @@ namespace OnlineVideoPlayer
 
             if (teclaPresionada == Key.Left && !IsRadio)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.currentPosition = axWindowsMediaPlayer1.Ctlcontrols.currentPosition - 5;
+                axWindowsMediaPlayer1.Ctlcontrols.currentPosition -= IsKeyDown(Keys.Control) ? 10 : 5;
 
-                if (paused)
-                {
-                    bool needUnmute = false;
-
-                    if (!Muted && PlayerVolume != 0)
-                    {
-                        //AlternMute();
-
-                        needUnmute = true;
-                    }
-
-                    axWindowsMediaPlayer1.Ctlcontrols.play();
-                    axWindowsMediaPlayer1.Ctlcontrols.pause();
-                    axWindowsMediaPlayer1.Refresh();
-                    axWindowsMediaPlayer1.Update();
-
-                    if (needUnmute)
-                    {
-                        //AlternMute();
-                    }
-                }
+                if (paused) ((WMPLib.IWMPControls2)axWindowsMediaPlayer1.Ctlcontrols).step(1);
             }
             else if (teclaPresionada == Key.Right && !IsRadio)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.currentPosition = axWindowsMediaPlayer1.Ctlcontrols.currentPosition + 5;
+                axWindowsMediaPlayer1.Ctlcontrols.currentPosition += IsKeyDown(Keys.Control) ? 10 : 5;
 
-                if (paused)
-                {
-                    bool needUnmute = false;
-
-                    if (!Muted && PlayerVolume != 0)
-                    {
-                        //AlternMute();
-
-                        needUnmute = true;
-                    }
-
-                    axWindowsMediaPlayer1.Ctlcontrols.play();
-                    axWindowsMediaPlayer1.Ctlcontrols.pause();
-                    axWindowsMediaPlayer1.Refresh();
-                    axWindowsMediaPlayer1.Update();
-
-                    if (needUnmute)
-                    {
-                        //AlternMute();
-                    }
-                }
+                if (paused) ((WMPLib.IWMPControls2)axWindowsMediaPlayer1.Ctlcontrols).step(1);
             }
             else if (teclaPresionada == Key.Down || teclaPresionada == Key.Up)
             {
@@ -1318,10 +1273,7 @@ namespace OnlineVideoPlayer
 
                 SetPlayerVolume(newVolume, newVolume <= 0, true);
 
-                if (newVolume >= 100)
-                {
-                    PlayBeep();
-                }
+                if (newVolume >= 100) PlayBeep();
             }
             else if ((teclaPresionada == Key.F && Keyboard.IsKeyDown(Key.F)) || (teclaPresionada == Key.F11 && Keyboard.IsKeyDown(Key.F11)))
             {
@@ -1469,29 +1421,22 @@ namespace OnlineVideoPlayer
             }
         }
 
-        private void AlternPause() => AlternPause(!paused);
+        private void AlternLoop() => SetLoop(!LoopPlaying);
 
-        private void AlternLoop() => AlternLoop(!LoopPlaying);
+        private void SetLoop(bool loop) => axWindowsMediaPlayer1.settings.setMode("loop", LoopPlaying = loop);
 
-        private void AlternPause(bool Pause)
+        private void AlternPause() => SetPause(!paused);
+
+        private void SetPause(bool pause)
         {
-            if (Pause)
+            if (paused = pause)
             {
-                paused = true;
                 axWindowsMediaPlayer1.Ctlcontrols.pause();
             }
             else
             {
-                paused = false;
                 axWindowsMediaPlayer1.Ctlcontrols.play();
             }
-        }
-
-        private void AlternLoop(bool Loop)
-        {
-            LoopPlaying = Loop;
-
-            axWindowsMediaPlayer1.settings.setMode("loop", Loop);
         }
 
         public bool VerticalVideo = false;
@@ -1512,9 +1457,7 @@ namespace OnlineVideoPlayer
                     width = axWindowsMediaPlayer1.currentMedia.imageSourceWidth;
                     height = axWindowsMediaPlayer1.currentMedia.imageSourceHeight;
                 }
-                catch
-                {
-                }
+                catch { }
             }
 
             Console.WriteLine("Cambiando tamaño de la ventama With " + width + " height " + height);
@@ -1541,8 +1484,8 @@ namespace OnlineVideoPlayer
             }
             else if (width > 300 || height > 300)
             {
-                width = (width * 2);
-                height = (height * 2);
+                width *= 2;
+                height *= 2;
             }
             else
             {
@@ -1570,40 +1513,43 @@ namespace OnlineVideoPlayer
             {
                 string titleTextCreator = "";
 
-                titleTextCreator = titleTextCreator + axWindowsMediaPlayer1.currentMedia.name.Trim('\"').Trim(':').Trim();
-
-                if (axWindowsMediaPlayer1.currentMedia.imageSourceWidth != 0 && !VerticalVideo && !IsRadio)
+                if (axWindowsMediaPlayer1.currentMedia != null)
                 {
-                    titleTextCreator = titleTextCreator + " (" + axWindowsMediaPlayer1.currentMedia.imageSourceWidth + "X" + axWindowsMediaPlayer1.currentMedia.imageSourceHeight + ")";
+                    titleTextCreator = titleTextCreator + axWindowsMediaPlayer1.currentMedia.name.Trim('\"').Trim(':').Trim();
+
+                    if (axWindowsMediaPlayer1.currentMedia.imageSourceWidth != 0 && !VerticalVideo && !IsRadio)
+                    {
+                        titleTextCreator = titleTextCreator + " (" + axWindowsMediaPlayer1.currentMedia.imageSourceWidth + "X" + axWindowsMediaPlayer1.currentMedia.imageSourceHeight + ")";
+                    }
+
+                    if (!IsRadio && !string.IsNullOrWhiteSpace(axWindowsMediaPlayer1.Ctlcontrols.currentPositionString))
+                    {
+                        titleTextCreator = titleTextCreator + " " + axWindowsMediaPlayer1.Ctlcontrols.currentPositionString + "/" + axWindowsMediaPlayer1.currentMedia.durationString;
+                    }
+
+                    await Task.Delay(40);
+
+                    if (VideoList.Count >= 2 && !IsRadio) titleTextCreator = titleTextCreator + "  Video:" + (videoSelecionado + 1) + "/" + VideoList.Count + "";
+
+                    titleTextCreator += " ";
+
+                    if (IsRadio) titleTextCreator += "📻";
+
+                    if (Muted) titleTextCreator += "🔇";
+
+                    if (paused) titleTextCreator += "⏸️ ";
+
+                    if (!IsRadio)
+                    {
+                        if (LoopPlaying) titleTextCreator += "♾️";
+
+                        if (VideoReload) titleTextCreator += "🔃";
+                    }
+
+                    titleTextCreator = Program.ArgsCalled ? titleTextCreator : titleTextCreator + (VideoVisits != 0 ? " 👀" + VideoVisits : null);
+
+                    this.Text = titleTextCreator;
                 }
-
-                if (!IsRadio && !string.IsNullOrWhiteSpace(axWindowsMediaPlayer1.Ctlcontrols.currentPositionString))
-                {
-                    titleTextCreator = titleTextCreator + " " + axWindowsMediaPlayer1.Ctlcontrols.currentPositionString + "/" + axWindowsMediaPlayer1.currentMedia.durationString;
-                }
-
-                await Task.Delay(10);
-
-                if (VideoList.Count >= 2 && !IsRadio) titleTextCreator = titleTextCreator + "  Video:" + (videoSelecionado + 1) + "/" + VideoList.Count + "";
-
-                titleTextCreator = titleTextCreator + " ";
-
-                if (IsRadio) titleTextCreator = titleTextCreator + "📻";
-
-                if (Muted) titleTextCreator = titleTextCreator + "🔇";
-
-                if (paused) titleTextCreator = titleTextCreator + "⏸️ ";
-
-                if (!IsRadio)
-                {
-                    if (LoopPlaying) titleTextCreator = titleTextCreator + "♾️";
-
-                    if (VideoReload) titleTextCreator = titleTextCreator + "🔃";
-                }
-
-                titleTextCreator = Program.ArgsCalled ? titleTextCreator : titleTextCreator + (VideoVisits != 0 ? " 👀" + VideoVisits : null);
-
-                this.Text = titleTextCreator;
             }
             catch { }
 
@@ -1694,10 +1640,7 @@ namespace OnlineVideoPlayer
         {
             using (RegistryKey dwmKey = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\DWM", RegistryKeyPermissionCheck.ReadSubTree))
             {
-                if (dwmKey is null)
-                {
-                    return DefaultColor;
-                }
+                if (dwmKey is null) return DefaultColor;
 
                 object accentColorObj = dwmKey.GetValue("AccentColor");
 
@@ -1716,22 +1659,16 @@ namespace OnlineVideoPlayer
 
         private static (byte r, byte g, byte b, byte a) ParseDWordColor(int color)
         {
-            byte
-                a = (byte)((color >> 24) & 0xFF),
-                b = (byte)((color >> 16) & 0xFF),
-                g = (byte)((color >> 8) & 0xFF),
-                r = (byte)((color >> 0) & 0xFF);
+            byte a = (byte)((color >> 24) & 0xFF), b = (byte)((color >> 16) & 0xFF), g = (byte)((color >> 8) & 0xFF), r = (byte)((color >> 0) & 0xFF);
 
             return (r, g, b, a);
         }
 
         private static bool RandomBool(int percentage) => new Random().Next(100) <= percentage;
 
-        private static bool CompresedBool(string text)
-        { return text == "1"; }
+        private static bool CompresedBool(string text) => text == "1";
 
-        private static string CompresedBool(bool boolean)
-        { return boolean ? "1" : "0"; }
+        private static string CompresedBool(bool boolean) => boolean ? "1" : "0";
 
         private static bool PlayingBeep = false;
 
@@ -1747,5 +1684,7 @@ namespace OnlineVideoPlayer
 
             PlayingBeep = false;
         }
+
+        public static bool IsKeyDown(Keys k) => (Control.ModifierKeys & k) == k;
     }
 }
