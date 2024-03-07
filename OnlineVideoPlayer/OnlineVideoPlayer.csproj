@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{313EEA7C-0B2F-4068-8DB7-45BD94B7051C}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>OnlineVideoPlayer</RootNamespace>
     <AssemblyName>OnlineVideoPlayer</AssemblyName>
     <LangVersion>preview</LangVersion>

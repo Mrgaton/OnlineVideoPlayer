@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -6,11 +7,13 @@ using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static OnlineVideoPlayer.Program;
 using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
@@ -46,7 +49,23 @@ namespace OnlineVideoPlayer
         [STAThread]
         private static void Main(string[] args)
         {
-            WindowsModificationsDetector.CheckWindows();
+            /*RegistryKey rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32");
+
+            foreach (string keyName in rk.GetValueNames())
+            {
+                if (keyName.StartsWith("msacm."))
+                {
+                    Console.WriteLine("Audio Codec: " + keyName);
+                }
+                else if (keyName.StartsWith("vidc."))
+                {
+                    Console.WriteLine("Video Codec: " + keyName);
+                }
+            }
+
+            Console.ReadLine();*/
+
+            //WindowsModificationsDetector.CheckWindows();
 
             if (Environment.OSVersion.Version.Major >= 6) SetProcessDPIAware();
 

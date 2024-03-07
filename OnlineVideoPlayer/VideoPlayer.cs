@@ -30,6 +30,8 @@ namespace OnlineVideoPlayer
     {
         [DllImport("winmm.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)] private static extern uint waveOutGetNumDevs();
 
+        private static Screen currentScreen = Screen.PrimaryScreen;
+
         private static WebClient wc = new WebClient();
 
         private static string DownloadName = "Pensando {0}";
@@ -44,7 +46,7 @@ namespace OnlineVideoPlayer
 
         private static Random Rand = new Random();
 
-        private int PlayerVolume = 60;
+        private int PlayerVolume = 50;
 
         public VideoPlayer()
         {
@@ -181,32 +183,35 @@ namespace OnlineVideoPlayer
             }
         }
 
-        private bool fristTime { get; set; } = true;
-        private bool FristTimeCheck { get; set; } = true;
-        private bool IsRadio { get; set; } = false;
+        private bool fristTime = true;
+        private bool FristTimeCheck = true;
+        private bool IsRadio = false;
 
-        private bool paused { get; set; } = false;
-        private bool Playing { get; set; } = false;
+        private bool paused = false;
+        private bool Playing = false;
 
-        private bool VideoReload { get; set; } = false;
-        private bool LoopPlaying { get; set; } = false;
+        private bool VideoReload = false;
+        private bool LoopPlaying = false;
 
-        private bool VideoIgnoreInput { get; set; } = false;
-        private bool VideoAllowPause { get; set; } = true;
-        private bool VideoHideMouse { get; set; } = false;
+        private bool VideoIgnoreInput = false;
+        private bool VideoAllowPause = true;
+        private bool VideoHideMouse = false;
 
-        private bool VideoFullScreen { get; set; } = false;
-        private bool VideoTopMost { get; set; } = false;
+        private bool VideoFullScreen = false;
+        private bool VideoTopMost = false;
 
-        private bool AllowClose { get; set; } = false;
-        private bool AllowMinimize { get; set; } = false;
-        private bool AllowMaximize { get; set; } = false;
+        private bool AllowClose = false;
+        private bool AllowMinimize = false;
+        private bool AllowMaximize = false;
+        private bool AllowFullScreen = false;
 
-        private bool VideoVolumeChanged { get; set; } = false;
-        private int VideoVolume { get; set; } = 50;
+        private bool VideoVolumeChanged = false;
+        private int VideoVolume = 0;
 
-        private bool PlayOnEnabled { get; set; } = false;
-        private DateTime PlayOn { get; set; } = new DateTime();
+        private int WindowSizePercentage = 60;
+
+        private bool PlayOnEnabled = false;
+        private DateTime PlayOn = new DateTime();
 
         private int videoSelecionado;
         private string VideoUrl;
@@ -219,6 +224,26 @@ namespace OnlineVideoPlayer
         private long VideoVisits = 0;
 
         private DownloadProgressChangedEventHandler DownloadProgressHandler = null;
+
+        private void ParseBoolElement(ref bool element, string line)
+        {
+            var value = line.Split('=').Last().Trim();
+            if (string.IsNullOrEmpty(value)) return;
+            if (bool.TryParse(value, out bool parsedValue))
+            {
+                element = parsedValue;
+            }
+        }
+
+        private void ParseNumberElement(ref int element, string line)
+        {
+            var value = line.Split('=').Last().Trim();
+            if (string.IsNullOrEmpty(value)) return;
+            if (int.TryParse(value, out int parsedValue))
+            {
+                element = parsedValue;
+            }
+        }
 
         private async void VideoPlayer_Shown(object sender, EventArgs e)
         {
@@ -346,7 +371,7 @@ namespace OnlineVideoPlayer
                                 HerededServerUrl = line;
                             }
 
-                            if (line.Contains("="))
+                            if (line.Contains('='))
                             {
                                 if (line.StartsWith("Opacity="))
                                 {
@@ -364,141 +389,67 @@ namespace OnlineVideoPlayer
                                 }
                                 else if (line.StartsWith("StartFullScreen="))
                                 {
-                                    try
+                                    if (bool.TryParse(line.Trim().Split('=').Last(), out bool startFullScreen) && startFullScreen)
                                     {
-                                        if (bool.Parse(line.Trim().Split('=').Last()))
-                                        {
-                                            this.WindowState = FormWindowState.Maximized;
-                                        }
+                                        this.WindowState = FormWindowState.Maximized;
                                     }
-                                    catch { }
                                 }
-                                else if (line.StartsWith("AllowPause="))
-                                {
-                                    try
-                                    {
-                                        VideoAllowPause = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
-                                else if (line.StartsWith("FullScreen="))
-                                {
-                                    try
-                                    {
-                                        VideoFullScreen = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
-                                else if (line.StartsWith("VideoReload="))
-                                {
-                                    try
-                                    {
-                                        VideoReload = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
-                                else if (line.StartsWith("AllowClose="))
-                                {
-                                    try
-                                    {
-                                        AllowClose = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
+                                else if (line.StartsWith("AllowPause=")) ParseBoolElement(ref VideoAllowPause, line);
+                                else if (line.StartsWith("FullScreen=")) ParseBoolElement(ref FullScreen, line);
+                                else if (line.StartsWith("AllowFullScreen=")) ParseBoolElement(ref AllowFullScreen, line);
+                                else if (line.StartsWith("VideoReload=")) ParseBoolElement(ref VideoReload, line);
+                                else if (line.StartsWith("AllowClose=")) ParseBoolElement(ref AllowClose, line);
                                 else if (line.StartsWith("AllowMinimize="))
                                 {
-                                    try
-                                    {
-                                        AllowMinimize = bool.Parse(line.Trim().Split('=').Last());
-
-                                        this.MinimizeBox = AllowMinimize;
-                                    }
-                                    catch { }
+                                    ParseBoolElement(ref AllowMinimize, line);
+                                    this.MinimizeBox = AllowMinimize;
                                 }
                                 else if (line.StartsWith("AllowMaximize="))
                                 {
-                                    try
-                                    {
-                                        AllowMaximize = bool.Parse(line.Trim().Split('=').Last());
-
-                                        this.MaximizeBox = AllowMaximize;
-                                    }
-                                    catch { }
+                                    ParseBoolElement(ref AllowMaximize, line);
+                                    this.MaximizeBox = AllowMaximize;
                                 }
-                                else if (line.StartsWith("HideMouse="))
-                                {
-                                    try
-                                    {
-                                        VideoHideMouse = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
+                                else if (line.StartsWith("HideMouse=")) ParseBoolElement(ref VideoHideMouse, line);
                                 else if (line.StartsWith("NeedAudioDevice="))
                                 {
-                                    try
+                                    if (bool.TryParse(line.Trim().Split('=').Last(), out bool needAudioDevice) && needAudioDevice && waveOutGetNumDevs() <= 0)
                                     {
-                                        if (bool.Parse(line.Trim().Split('=').Last()) && waveOutGetNumDevs() <= 0)
-                                        {
-                                            this.Hide();
+                                        this.Hide();
 
-                                            MessageBox.Show("Para usar este programa, es necesario que tengas un dispositivo de audio conectado a tu computadora. El dispositivo de audio puede ser un altavoz, unos auriculares o un micrófono. El programa usará el dispositivo de audio para reproducir o grabar sonidos según lo que quieras hacer.\r\n\r\nSi no tienes un dispositivo de audio o no funciona correctamente, el programa no podrá funcionar. Por favor, asegúrate de que tu dispositivo de audio esté bien conectado y configurado antes de usar el programa.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        MessageBox.Show("Para usar este programa, es necesario que tengas un dispositivo de audio conectado a tu computadora. El dispositivo de audio puede ser un altavoz, unos auriculares o un micrófono. El programa usará el dispositivo de audio para reproducir o grabar sonidos según lo que quieras hacer.\r\n\r\nSi no tienes un dispositivo de audio o no funciona correctamente, el programa no podrá funcionar. Por favor, asegúrate de que tu dispositivo de audio esté bien conectado y configurado antes de usar el programa.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                                            Environment.Exit(1);
-                                        }
+                                        Environment.Exit(1);
                                     }
-                                    catch { }
                                 }
                                 else if (line.StartsWith("VideoLoop="))
                                 {
-                                    try
-                                    {
-                                        AlternLoop(bool.Parse(line.Trim().Split('=').Last()));
-                                    }
-                                    catch { }
+                                    if (bool.TryParse(line.Split('=').Last().Trim(), out bool videoLoop)) SetLoop(videoLoop);
                                 }
-                                else if (line.StartsWith("IgnoreInput="))
-                                {
-                                    try
-                                    {
-                                        VideoIgnoreInput = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
+                                else if (line.StartsWith("IgnoreInput=")) ParseBoolElement(ref VideoIgnoreInput, line);
                                 else if (line.StartsWith("Volume="))
                                 {
-                                    try
+                                    if (int.TryParse(line.Split('=').Last().Trim(), out VideoVolume) && VideoVolume != PlayerVolume)
                                     {
-                                        VideoVolume = int.Parse(line.Trim().Split('=').Last());
-
-                                        if (VideoVolume != PlayerVolume)
-                                        {
-                                            VideoVolumeChanged = true;
-                                        }
+                                        VideoVolumeChanged = true;
                                     }
-                                    catch { }
                                 }
-                                else if (line.StartsWith("TopMost="))
-                                {
-                                    try
-                                    {
-                                        VideoTopMost = bool.Parse(line.Trim().Split('=').Last());
-                                    }
-                                    catch { }
-                                }
+                                else if (line.StartsWith("TopMost=")) ParseBoolElement(ref VideoTopMost, line);
                                 else if (line.StartsWith("DebugOnly="))
                                 {
-                                    try
+                                    if (bool.TryParse(line.Trim().Split('=').Last(), out bool debugOnly) && debugOnly && !Debugger.IsAttached)
                                     {
-                                        if (bool.Parse(line.Trim().Split('=').Last()) && !Debugger.IsAttached)
-                                        {
-                                            WaitForPlayTimer.Enabled = false;
-
-                                            this.Hide();
-                                            MessageBox.Show("El servidor esta en modo de pruebas y es posible que se esten probando funciones nuevas que no son compatibles con tu version", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                            Environment.Exit(0);
-                                        }
+                                        WaitForPlayTimer.Enabled = false;
+                                        this.Hide();
+                                        MessageBox.Show("El servidor esta en modo de pruebas y es posible que se esten probando funciones nuevas que no son compatibles con tu version", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        Environment.Exit(0);
                                     }
-                                    catch { }
+                                }
+                                else if (line.StartsWith("WindowSize="))
+                                {
+                                    if (int.TryParse(line.Split('=').Last().TrimEnd('%'), out int parsedSize) && parsedSize > 0 && parsedSize < 101)
+                                    {
+                                        WindowSizePercentage = parsedSize;
+                                    }
                                 }
                                 else if (line.StartsWith("PlayOn="))
                                 {
@@ -549,7 +500,6 @@ namespace OnlineVideoPlayer
                                         Console.WriteLine(ex.ToString());
 
                                         WaitForPlayTimer.Enabled = false;
-
                                         PlayOn = DateTime.Now;
                                     }
                                 }
@@ -656,6 +606,7 @@ namespace OnlineVideoPlayer
 
                 Dictionary<string, int> channelVideosList = new Dictionary<string, int>();
                 Dictionary<string, int> newChannelVideos = new Dictionary<string, int>();
+
                 int chanelNum = 0;
 
                 foreach (var vid in VideoList)
@@ -1277,7 +1228,7 @@ namespace OnlineVideoPlayer
             }
             else if ((teclaPresionada == Key.F && Keyboard.IsKeyDown(Key.F)) || (teclaPresionada == Key.F11 && Keyboard.IsKeyDown(Key.F11)))
             {
-                if (AlterningFullScreen) return;
+                if (AlterningFullScreen || !AllowFullScreen) return;
 
                 AlternFullScreen();
             }
@@ -1291,7 +1242,7 @@ namespace OnlineVideoPlayer
 
                 LoopPlaying = false;
 
-                AlternLoop(false);
+                SetLoop(false);
             }
             else if (teclaPresionada == Key.R)
             {
@@ -1343,6 +1294,7 @@ namespace OnlineVideoPlayer
                 if (this.WindowState == FormWindowState.Maximized)
                 {
                     WasMaximized = true;
+
                     this.WindowState = FormWindowState.Normal;
                 }
                 else
@@ -1356,16 +1308,8 @@ namespace OnlineVideoPlayer
             }
             else
             {
-                if (WasMaximized)
-                {
-                    this.WindowState = FormWindowState.Maximized;
-                }
-                else
-                {
-                    this.WindowState = FormWindowState.Normal;
-                }
+                this.WindowState = WasMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
                 this.FormBorderStyle = FormBorderStyle.Sizable;
-
                 Task.Factory.StartNew(() => Invoke(new MethodInvoker(() => SetWindowSize())));
             }
 
@@ -1460,9 +1404,32 @@ namespace OnlineVideoPlayer
                 catch { }
             }
 
+            double widthPercentage, heightPercentage;
+
+            if (width > height)
+            {
+                widthPercentage = 100;
+                heightPercentage = ((double)height * 100) / width;
+            }
+            else if (height > width)
+            {
+                heightPercentage = 100;
+                widthPercentage = ((double)width * 100) / height;
+            }
+            else
+            {
+                heightPercentage = widthPercentage = 100;
+            }
+
+            widthPercentage = (widthPercentage * WindowSizePercentage) / 100;
+            heightPercentage = (heightPercentage * WindowSizePercentage) / 100;
+
+            width = (int)((currentScreen.Bounds.Width / 100) * widthPercentage);
+            height = (int)((currentScreen.Bounds.Width / 100) * heightPercentage);
+
             Console.WriteLine("Cambiando tamaño de la ventama With " + width + " height " + height);
 
-            if (width > 1920 || height > 1920)
+            /*if (width > 1920 || height > 1920)
             {
                 width = width / 2;
                 height = height / 2;
@@ -1491,9 +1458,8 @@ namespace OnlineVideoPlayer
             {
                 width = (int)(width * 2.4);
                 height = (int)(height * 2.4);
-            }
+            }*/
 
-            this.Size = new Size(width, height);
 
             /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axWindowsMediaPlayer1.Size.width))) / 1000;
             int PreCalculatedWidth = (int)Math.Round(((this.Size.width - ((double)this.Size.width * WidthCalcPerc) * 1000)) + width);
@@ -1501,6 +1467,7 @@ namespace OnlineVideoPlayer
             double HeightCalcPerc = (double)(this.Size.height / (double)(this.Size.height + (this.Size.height - axWindowsMediaPlayer1.Size.height))) / 1000;
             int PreCalculatedHeight = (int)Math.Round(((this.Size.height - ((double)this.Size.height * HeightCalcPerc) * 1000)) + height);*/
 
+            this.Size = new Size(width, height);
             this.Size = new Size(this.Width + (this.Size.Width - axWindowsMediaPlayer1.Width), this.Height + (this.Size.Height - axWindowsMediaPlayer1.Height));
             this.Location = new Point((Screen.FromControl(this).WorkingArea.Width - this.Width) / 2, (Screen.FromControl(this).WorkingArea.Height - this.Height) / 2);
         }
