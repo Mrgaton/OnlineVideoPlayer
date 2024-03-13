@@ -89,7 +89,8 @@ namespace OnlineVideoPlayer
                 Directory.SetCurrentDirectory(new FileInfo(ConfigPath).Directory.FullName);
             }
 
-            if (!string.IsNullOrWhiteSpace(ConfigPath) && ConfigPath.ToLower() != CurrentFilePath.ToLower()) ArgsCalled = true;
+
+            if (!string.IsNullOrWhiteSpace(ConfigPath) && Path.GetFullPath(ConfigPath).ToLower() != Path.GetFullPath(CurrentFilePath).ToLower()) ArgsCalled = true;
 
             if (GetConsoleWindow() != IntPtr.Zero)
             {
@@ -167,6 +168,8 @@ namespace OnlineVideoPlayer
                 MessageBox.Show("Opaa parece que no estas conectado a ninguna red, conectate a una antes de utilizar el programa", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(0);
             }
+
+            Console.WriteLine("Starting form AC=" + ArgsCalled);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

@@ -1,6 +1,8 @@
-﻿using Microsoft.Win32;
+﻿using AngleSharp.Common;
+using Microsoft.Win32;
 using OnlineVideoPlayer.Properties;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -46,7 +48,7 @@ namespace OnlineVideoPlayer
 
         private static Random Rand = new Random();
 
-        private int PlayerVolume = 50;
+        private int PlayerVolume = 60;
 
         public VideoPlayer()
         {
@@ -205,8 +207,10 @@ namespace OnlineVideoPlayer
         private bool AllowMaximize = false;
         private bool AllowFullScreen = false;
 
+        private bool EnableVideoViews = true;
+
         private bool VideoVolumeChanged = false;
-        private int VideoVolume = 0;
+        private int VideoVolume = 50;
 
         private int WindowSizePercentage = 60;
 
@@ -324,13 +328,20 @@ namespace OnlineVideoPlayer
 
                 FristTimeCheck = false;
 
+
+                var joined = serverData.Split('\n').Where(l => string.IsNullOrWhiteSpace(l) && l[0] != '#');
+              
+                foreach(DictionaryEntry a in Environment.GetEnvironmentVariables())
+                {
+                    Console.WriteLine(a.Key + "=" + a.Value);
+                }
+                Console.WriteLine(string.Join("\n", (Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User).Keys).ToDictionary().Select(k => k.Key + '=' + k.Value)));
+
                 using (StringReader reader = new StringReader(serverData))
                 {
-                    while ((line = reader.ReadLine()) != null)
+                    while ((line = reader.ReadLine()?.Trim()) != null)
                     {
                         ln++;
-
-                        line = line.Trim();
 
                         if (!string.IsNullOrWhiteSpace(line) || !line.StartsWith("#"))
                         {
@@ -399,6 +410,7 @@ namespace OnlineVideoPlayer
                                 else if (line.StartsWith("AllowFullScreen=")) ParseBoolElement(ref AllowFullScreen, line);
                                 else if (line.StartsWith("VideoReload=")) ParseBoolElement(ref VideoReload, line);
                                 else if (line.StartsWith("AllowClose=")) ParseBoolElement(ref AllowClose, line);
+                                else if (line.StartsWith("VideoViews=")) ParseBoolElement(ref EnableVideoViews, line);
                                 else if (line.StartsWith("AllowMinimize="))
                                 {
                                     ParseBoolElement(ref AllowMinimize, line);
