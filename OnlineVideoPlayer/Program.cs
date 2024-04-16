@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -7,13 +6,11 @@ using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static OnlineVideoPlayer.Program;
 using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
@@ -42,7 +39,7 @@ namespace OnlineVideoPlayer
 
         public static string ProgramVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
-        public static string VideoPlayerConfigPath = Program.arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetHash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
+        public static string VideoPlayerConfigPath = arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetHash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
 
         public static string tempPath = Path.GetTempPath();
 
@@ -88,7 +85,6 @@ namespace OnlineVideoPlayer
             {
                 Directory.SetCurrentDirectory(new FileInfo(ConfigPath).Directory.FullName);
             }
-
 
             if (!string.IsNullOrWhiteSpace(ConfigPath) && Path.GetFullPath(ConfigPath).ToLower() != Path.GetFullPath(CurrentFilePath).ToLower()) ArgsCalled = true;
 

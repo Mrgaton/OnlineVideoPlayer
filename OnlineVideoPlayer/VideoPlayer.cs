@@ -328,10 +328,9 @@ namespace OnlineVideoPlayer
 
                 FristTimeCheck = false;
 
-
                 var joined = serverData.Split('\n').Where(l => string.IsNullOrWhiteSpace(l) && l[0] != '#');
-              
-                foreach(DictionaryEntry a in Environment.GetEnvironmentVariables())
+
+                foreach (DictionaryEntry a in Environment.GetEnvironmentVariables())
                 {
                     Console.WriteLine(a.Key + "=" + a.Value);
                 }
@@ -1471,7 +1470,6 @@ namespace OnlineVideoPlayer
                 width = (int)(width * 2.4);
                 height = (int)(height * 2.4);
             }*/
-
 
             /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axWindowsMediaPlayer1.Size.width))) / 1000;
             int PreCalculatedWidth = (int)Math.Round(((this.Size.width - ((double)this.Size.width * WidthCalcPerc) * 1000)) + width);
