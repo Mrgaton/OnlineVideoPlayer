@@ -1447,6 +1447,8 @@ namespace OnlineVideoPlayer
             }*/
 
             /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axMediaPlayer.Size.width))) / 1000;
+            /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axWindowsMediaPlayer1.Size.width))) / 1000;
+            /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axWindowsMediaPlayer1.Size.width))) / 1000;
             int PreCalculatedWidth = (int)Math.Round(((this.Size.width - ((double)this.Size.width * WidthCalcPerc) * 1000)) + width);
 
             double HeightCalcPerc = (double)(this.Size.height / (double)(this.Size.height + (this.Size.height - axMediaPlayer.Size.height))) / 1000;
