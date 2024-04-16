@@ -63,9 +63,9 @@ namespace OnlineVideoPlayer.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Loading_Big {
+        internal static System.Drawing.Bitmap Loading {
             get {
-                object obj = ResourceManager.GetObject("Loading_Big", resourceCulture);
+                object obj = ResourceManager.GetObject("Loading", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

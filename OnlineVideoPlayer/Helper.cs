@@ -9,7 +9,7 @@ namespace OnlineVideoPlayer
         {
             if (link == null) return false;
 
-            return link.ToLower().StartsWith("http") && link.ToLower().Contains("://");
+            return link.ToLower().StartsWith("http", System.StringComparison.InvariantCultureIgnoreCase) && link.ToLower().Contains("://");
         }
 
         public static bool IsYoutubeLink(string link)

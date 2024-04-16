@@ -31,11 +31,11 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VideoPlayer));
             this.MetaDataTimer = new System.Windows.Forms.Timer(this.components);
-            this.axWindowsMediaPlayer1 = new AxWMPLib.AxWindowsMediaPlayer();
+            this.axMediaPlayer = new AxWMPLib.AxWindowsMediaPlayer();
             this.GifPictureBox = new System.Windows.Forms.PictureBox();
             this.VideoPanel = new System.Windows.Forms.Panel();
             this.WaitForPlayTimer = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.axMediaPlayer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.GifPictureBox)).BeginInit();
             this.VideoPanel.SuspendLayout();
             this.SuspendLayout();
@@ -46,14 +46,14 @@
             this.MetaDataTimer.Interval = 1000;
             this.MetaDataTimer.Tick += new System.EventHandler(this.MetaDataTimer_Tick);
             // 
-            // axWindowsMediaPlayer1
+            // axMediaPlayer
             // 
-            resources.ApplyResources(this.axWindowsMediaPlayer1, "axWindowsMediaPlayer1");
-            this.axWindowsMediaPlayer1.Name = "axWindowsMediaPlayer1";
-            this.axWindowsMediaPlayer1.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("axWindowsMediaPlayer1.OcxState")));
-            this.axWindowsMediaPlayer1.ClickEvent += new AxWMPLib._WMPOCXEvents_ClickEventHandler(this.axWindowsMediaPlayer1_ClickEvent);
-            this.axWindowsMediaPlayer1.DoubleClickEvent += new AxWMPLib._WMPOCXEvents_DoubleClickEventHandler(this.axWindowsMediaPlayer1_DoubleClickEvent);
-            this.axWindowsMediaPlayer1.KeyDownEvent += new AxWMPLib._WMPOCXEvents_KeyDownEventHandler(this.axWindowsMediaPlayer1_KeyDownEvent);
+            resources.ApplyResources(this.axMediaPlayer, "axMediaPlayer");
+            this.axMediaPlayer.Name = "axMediaPlayer";;
+            this.axMediaPlayer.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("axMediaPlayer.OcxState")));
+            this.axMediaPlayer.ClickEvent += new AxWMPLib._WMPOCXEvents_ClickEventHandler(this.axWindowsMediaPlayer1_ClickEvent);
+            this.axMediaPlayer.DoubleClickEvent += new AxWMPLib._WMPOCXEvents_DoubleClickEventHandler(this.axWindowsMediaPlayer1_DoubleClickEvent);
+            this.axMediaPlayer.KeyDownEvent += new AxWMPLib._WMPOCXEvents_KeyDownEventHandler(this.axWindowsMediaPlayer1_KeyDownEvent);
             // 
             // GifPictureBox
             // 
@@ -67,7 +67,7 @@
             this.VideoPanel.AccessibleRole = System.Windows.Forms.AccessibleRole.OutlineButton;
             this.VideoPanel.BackColor = System.Drawing.SystemColors.GrayText;
             this.VideoPanel.Controls.Add(this.GifPictureBox);
-            this.VideoPanel.Controls.Add(this.axWindowsMediaPlayer1);
+            this.VideoPanel.Controls.Add(this.axMediaPlayer);
             resources.ApplyResources(this.VideoPanel, "VideoPanel");
             this.VideoPanel.Name = "VideoPanel";
             // 
@@ -86,7 +86,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.VideoPlayer_FormClosing);
             this.Load += new System.EventHandler(this.VideoPlayer_Load);
             this.Shown += new System.EventHandler(this.VideoPlayer_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.axWindowsMediaPlayer1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.axMediaPlayer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.GifPictureBox)).EndInit();
             this.VideoPanel.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -95,7 +95,7 @@
 
         #endregion
         private System.Windows.Forms.Timer MetaDataTimer;
-        private AxWMPLib.AxWindowsMediaPlayer axWindowsMediaPlayer1;
+        private AxWMPLib.AxWindowsMediaPlayer axMediaPlayer;
         private System.Windows.Forms.PictureBox GifPictureBox;
         private System.Windows.Forms.Panel VideoPanel;
         private System.Windows.Forms.Timer WaitForPlayTimer;

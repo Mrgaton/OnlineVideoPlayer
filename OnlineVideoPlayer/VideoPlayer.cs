@@ -2,7 +2,6 @@
 using Microsoft.Win32;
 using OnlineVideoPlayer.Properties;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -40,7 +39,7 @@ namespace OnlineVideoPlayer
 
         private static Size originalSize;
 
-        private static string ServerUrl = "https://gato.ovh/programs/ovp/mashle/data.OVP";
+        public static string ServerUrl { get; set; } = "https://gato.ovh/programs/ovp/main.OVP";
 
         private bool ConectionToHerededServer = false;
         private bool HerededServer = false;
@@ -60,7 +59,7 @@ namespace OnlineVideoPlayer
 
             originalSize = this.Size;
 
-            axWindowsMediaPlayer1.PlayStateChange += new AxWMPLib._WMPOCXEvents_PlayStateChangeEventHandler(wmp_PlayStateChange);
+            axMediaPlayer.PlayStateChange += new AxWMPLib._WMPOCXEvents_PlayStateChangeEventHandler(wmp_PlayStateChange);
         }
 
         private void VideoPlayer_Load(object sender, EventArgs e)
@@ -70,14 +69,14 @@ namespace OnlineVideoPlayer
 
             this.Icon = Program.ProgramIco;
 
-            GifPictureBox.Image = Resources.Loading_Big;
+            GifPictureBox.Image = Resources.Loading;
 
             GifPictureBox.BackColor = GetAccentColor();
         }
 
         private void ChangeFormIconFromUrl(string url)
         {
-            Invoke(new MethodInvoker(() =>
+            Invoke(new MethodInvoker(async () =>
             {
                 try
                 {
@@ -109,16 +108,13 @@ namespace OnlineVideoPlayer
 
                         if (internetUri)
                         {
-                            iconData = new WebClient().DownloadData(url);
+                            iconData = await wc.CustomDataDownloadAsync(url);
 
                             File.WriteAllBytes(tempIconPath, Compress(iconData));
                         }
                         else
                         {
-                            if (File.Exists(url))
-                            {
-                                iconData = File.ReadAllBytes(url);
-                            }
+                            if (File.Exists(url)) iconData = File.ReadAllBytes(url);
                         }
                     }
 
@@ -202,7 +198,7 @@ namespace OnlineVideoPlayer
         private bool VideoFullScreen = false;
         private bool VideoTopMost = false;
 
-        private bool AllowClose = false;
+        private bool AllowClose = true;
         private bool AllowMinimize = false;
         private bool AllowMaximize = false;
         private bool AllowFullScreen = false;
@@ -259,7 +255,7 @@ namespace OnlineVideoPlayer
 
             if (FristTimeCheck)
             {
-                GifPictureBox.Image = Resources.Loading_Big;
+                GifPictureBox.Image = Resources.Loading;
 
                 DownloadProgressHandler = new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 
@@ -289,10 +285,7 @@ namespace OnlineVideoPlayer
 
                         DownloadName = "Conectandose al servidor {0}";
 
-                        if (FristTimeCheck)
-                        {
-                            this.Text = "Conectandose al servidor ";
-                        }
+                        if (FristTimeCheck) this.Text = "Conectandose al servidor";
 
                         serverData = await wc.DownloadStringTaskAsync(ServerUrl);
                     }
@@ -303,7 +296,7 @@ namespace OnlineVideoPlayer
 
                         if (FristTimeCheck)
                         {
-                            this.Text = "Conectandose al servidor heredado ";
+                            this.Text = "Conectandose al servidor heredado";
                         }
 
                         serverData = await wc.DownloadStringTaskAsync(HerededServerUrl);
@@ -317,10 +310,7 @@ namespace OnlineVideoPlayer
                     serverData = File.ReadAllText(Program.ConfigPath);
                 }
 
-                if (FristTimeCheck)
-                {
-                    this.Text = "Procesando informacion";
-                }
+                if (FristTimeCheck) this.Text = "Procesando informacion";
 
                 string line;
 
@@ -328,14 +318,11 @@ namespace OnlineVideoPlayer
 
                 FristTimeCheck = false;
 
-
-                var joined = serverData.Split('\n').Where(l => string.IsNullOrWhiteSpace(l) && l[0] != '#');
-              
-                foreach(DictionaryEntry a in Environment.GetEnvironmentVariables())
+                /*foreach (DictionaryEntry a in Environment.GetEnvironmentVariables())
                 {
                     Console.WriteLine(a.Key + "=" + a.Value);
                 }
-                Console.WriteLine(string.Join("\n", (Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User).Keys).ToDictionary().Select(k => k.Key + '=' + k.Value)));
+                Console.WriteLine(string.Join("\n", (Environment.GetEnvironmentVariables(EnvironmentVariableTarget.User).Keys).ToDictionary().Select(k => k.Key + '=' + k.Value)));*/
 
                 using (StringReader reader = new StringReader(serverData))
                 {
@@ -345,23 +332,21 @@ namespace OnlineVideoPlayer
 
                         if (!string.IsNullOrWhiteSpace(line) || !line.StartsWith("#"))
                         {
+                            if (line.Contains('%')) line = Environment.ExpandEnvironmentVariables(line);
+
                             string[] videoExtensions = { ".mp4", ".mp3", ".mov", ".webm", ".avi", ".wmv" };
 
-                            if (videoExtensions.Any(ext => line.EndsWith(ext, StringComparison.InvariantCultureIgnoreCase)) || Helper.IsYoutubeLink(line))
+                            if (Helper.IsYoutubeLink(line) || videoExtensions.Any(ext => line.EndsWith(ext, StringComparison.InvariantCultureIgnoreCase)))
                             {
                                 if (!Program.ArgsCalled && !Helper.IsHttpsLink(line)) continue;
 
                                 VideoList.Add(line, ln);
                             }
 
-                            if (!ConectionToHerededServer && Helper.IsHttpsLink(line) && line.ToLower().EndsWith(".exe") && !Program.ArgsCalled)
+                            if (!ConectionToHerededServer && Helper.IsHttpsLink(line) && line.ToLower().EndsWith(".exe") && !Program.ArgsCalled && !serverData.Contains(Program.ProgramVersion))
                             {
-                                if (!serverData.Contains(Program.ProgramVersion))
-                                {
-                                    UpdateProgram(line, wc);
-
-                                    return;
-                                }
+                                await UpdateProgram(line, wc);
+                                return;
                             }
 
                             string[] imageExtensions = [".ico", ".png", ".jpg", ".jpeg", ".gif"];
@@ -486,11 +471,8 @@ namespace OnlineVideoPlayer
                                         if (tiempoDeEspera.Ticks >= 0)
                                         {
                                             GifPictureBox.Image = Resources.SandClock;
-
                                             WaitForPlayTimer_Tick(new object(), new EventArgs());
-
                                             WaitForPlayTimer.Enabled = true;
-
                                             return;
                                         }
                                         else
@@ -844,8 +826,6 @@ namespace OnlineVideoPlayer
 
                         if (!File.Exists(videoDefaultPath))
                         {
-                            DownloadName = "Descargando video {0}";
-
                             File.Create(tempSignalFile).Close();
 
                             this.Text = "Preparando para descargar";
@@ -854,8 +834,9 @@ namespace OnlineVideoPlayer
                             var streamInfo = streamManifest.GetMuxedStreams().GetWithHighestVideoQuality();
 
                             this.Text = "Descargando video";
+                            DownloadName = this.Text + " {0}";
 
-                            await videosProcesor.Videos.Streams.DownloadAsync(streamInfo, videoDefaultPath, new Progress<double>(a => client_DownloadProgressChanged(a)));
+                            await videosProcesor.Videos.Streams.DownloadAsync(streamInfo, videoDefaultPath, new Progress<double>(client_DownloadProgressChanged));
 
                             File.Delete(tempSignalFile);
                         }
@@ -866,16 +847,17 @@ namespace OnlineVideoPlayer
                         {
                             if (!File.Exists(videoDefaultPath))
                             {
-                                DownloadName = "Descargando video {0}";
-
                                 File.Create(tempSignalFile).Close();
 
                                 this.Text = "Descargando video";
+                                DownloadName = this.Text + " {0}";
 
-                                byte[] videoData = await wc.DownloadDataTaskAsync(new Uri(VideoUrl));
+                                wc.Headers.Add("referer", this.Name);
+                                wc.Headers.Add("user-agent", Application.ProductName);
+
+                                byte[] videoData = await wc.CustomDataDownloadAsync(VideoUrl);
 
                                 File.WriteAllBytes(videoDefaultPath, videoData);
-
                                 File.Delete(tempSignalFile);
                             }
                         }
@@ -890,16 +872,9 @@ namespace OnlineVideoPlayer
                     }
                 }
 
-                if (IsRadio)
-                {
-                    videoDefaultPath = VideoUrl;
+                if (IsRadio) videoDefaultPath = VideoUrl;
 
-                    this.Text = "Procesando audio";
-                }
-                else
-                {
-                    this.Text = "Procesando video";
-                }
+                this.Text = "Procesando " + (IsRadio ? "audio" : "video");
 
                 Repeating = false;
 
@@ -965,17 +940,16 @@ namespace OnlineVideoPlayer
                     }
                 }
 
-                VideoPanel.Dock = DockStyle.Fill;
-                axWindowsMediaPlayer1.Dock = DockStyle.Fill;
+                VideoPanel.Dock = axMediaPlayer.Dock = DockStyle.Fill;
 
-                axWindowsMediaPlayer1.settings.autoStart = true;
-                axWindowsMediaPlayer1.settings.enableErrorDialogs = true;
-                axWindowsMediaPlayer1.URL = VideoPath;
-                axWindowsMediaPlayer1.stretchToFit = true;
-                axWindowsMediaPlayer1.uiMode = "none";
-                axWindowsMediaPlayer1.Visible = true;
+                axMediaPlayer.settings.autoStart = true;
+                axMediaPlayer.settings.enableErrorDialogs = true;
+                axMediaPlayer.URL = VideoPath;
+                axMediaPlayer.stretchToFit = true;
+                axMediaPlayer.uiMode = "none";
+                axMediaPlayer.Visible = true;
 
-                axWindowsMediaPlayer1.settings.rate = 1;
+                axMediaPlayer.settings.rate = 1;
 
                 MetaDataTimer.Enabled = true;
                 GifPictureBox.Visible = false;
@@ -989,7 +963,7 @@ namespace OnlineVideoPlayer
 
                 try
                 {
-                    axWindowsMediaPlayer1.Ctlcontrols.play();
+                    axMediaPlayer.Ctlcontrols.play();
                 }
                 catch (Exception ex)
                 {
@@ -1000,7 +974,7 @@ namespace OnlineVideoPlayer
 
                 try
                 {
-                    axWindowsMediaPlayer1.currentMedia.name = videoName;
+                    axMediaPlayer.currentMedia.name = videoName;
                 }
                 catch { }
 
@@ -1175,7 +1149,7 @@ namespace OnlineVideoPlayer
         {
             if (!Repeating)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.pause();
+                axMediaPlayer.Ctlcontrols.pause();
 
                 Repeating = true;
 
@@ -1201,21 +1175,21 @@ namespace OnlineVideoPlayer
 
             if (teclaPresionada == Key.Left && !IsRadio)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.currentPosition -= IsKeyDown(Keys.Control) ? 10 : 5;
+                axMediaPlayer.Ctlcontrols.currentPosition -= IsKeyDown(Keys.Control) ? 10 : 5;
 
-                if (paused) ((WMPLib.IWMPControls2)axWindowsMediaPlayer1.Ctlcontrols).step(1);
+                if (paused) ((WMPLib.IWMPControls2)axMediaPlayer.Ctlcontrols).step(1);
             }
             else if (teclaPresionada == Key.Right && !IsRadio)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.currentPosition += IsKeyDown(Keys.Control) ? 10 : 5;
+                axMediaPlayer.Ctlcontrols.currentPosition += IsKeyDown(Keys.Control) ? 10 : 5;
 
-                if (paused) ((WMPLib.IWMPControls2)axWindowsMediaPlayer1.Ctlcontrols).step(1);
+                if (paused) ((WMPLib.IWMPControls2)axMediaPlayer.Ctlcontrols).step(1);
             }
             else if (teclaPresionada == Key.Down || teclaPresionada == Key.Up)
             {
                 bool volumenUp = teclaPresionada == Key.Up;
 
-                int currentPlayerVolume = axWindowsMediaPlayer1.settings.volume;
+                int currentPlayerVolume = axMediaPlayer.settings.volume;
 
                 int incrementator;
 
@@ -1358,13 +1332,13 @@ namespace OnlineVideoPlayer
 
             Console.WriteLine("Cambiando Volumen:" + newVolume.ToString() + " Mute:" + Mute + " Save:" + Save.ToString());
 
-            axWindowsMediaPlayer1.settings.volume = newVolume;
+            axMediaPlayer.settings.volume = newVolume;
 
             if (Muted && newVolume != 0)
             {
                 Muted = false;
             }
-            else if (!Muted && (axWindowsMediaPlayer1.settings.volume == 0 && newVolume == 0))
+            else if (!Muted && (axMediaPlayer.settings.volume == 0 && newVolume == 0))
             {
                 Muted = true;
             }
@@ -1379,7 +1353,7 @@ namespace OnlineVideoPlayer
 
         private void AlternLoop() => SetLoop(!LoopPlaying);
 
-        private void SetLoop(bool loop) => axWindowsMediaPlayer1.settings.setMode("loop", LoopPlaying = loop);
+        private void SetLoop(bool loop) => axMediaPlayer.settings.setMode("loop", LoopPlaying = loop);
 
         private void AlternPause() => SetPause(!paused);
 
@@ -1387,11 +1361,11 @@ namespace OnlineVideoPlayer
         {
             if (paused = pause)
             {
-                axWindowsMediaPlayer1.Ctlcontrols.pause();
+                axMediaPlayer.Ctlcontrols.pause();
             }
             else
             {
-                axWindowsMediaPlayer1.Ctlcontrols.play();
+                axMediaPlayer.Ctlcontrols.play();
             }
         }
 
@@ -1410,8 +1384,8 @@ namespace OnlineVideoPlayer
 
                 try
                 {
-                    width = axWindowsMediaPlayer1.currentMedia.imageSourceWidth;
-                    height = axWindowsMediaPlayer1.currentMedia.imageSourceHeight;
+                    width = axMediaPlayer.currentMedia.imageSourceWidth;
+                    height = axMediaPlayer.currentMedia.imageSourceHeight;
                 }
                 catch { }
             }
@@ -1472,15 +1446,14 @@ namespace OnlineVideoPlayer
                 height = (int)(height * 2.4);
             }*/
 
-
-            /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axWindowsMediaPlayer1.Size.width))) / 1000;
+            /*double WidthCalcPerc = (double)(this.Size.width / (double)(this.Size.width + (this.Size.width - axMediaPlayer.Size.width))) / 1000;
             int PreCalculatedWidth = (int)Math.Round(((this.Size.width - ((double)this.Size.width * WidthCalcPerc) * 1000)) + width);
 
-            double HeightCalcPerc = (double)(this.Size.height / (double)(this.Size.height + (this.Size.height - axWindowsMediaPlayer1.Size.height))) / 1000;
+            double HeightCalcPerc = (double)(this.Size.height / (double)(this.Size.height + (this.Size.height - axMediaPlayer.Size.height))) / 1000;
             int PreCalculatedHeight = (int)Math.Round(((this.Size.height - ((double)this.Size.height * HeightCalcPerc) * 1000)) + height);*/
 
             this.Size = new Size(width, height);
-            this.Size = new Size(this.Width + (this.Size.Width - axWindowsMediaPlayer1.Width), this.Height + (this.Size.Height - axWindowsMediaPlayer1.Height));
+            this.Size = new Size(this.Width + (this.Size.Width - axMediaPlayer.Width), this.Height + (this.Size.Height - axMediaPlayer.Height));
             this.Location = new Point((Screen.FromControl(this).WorkingArea.Width - this.Width) / 2, (Screen.FromControl(this).WorkingArea.Height - this.Height) / 2);
         }
 
@@ -1492,18 +1465,18 @@ namespace OnlineVideoPlayer
             {
                 string titleTextCreator = "";
 
-                if (axWindowsMediaPlayer1.currentMedia != null)
+                if (axMediaPlayer.currentMedia != null)
                 {
-                    titleTextCreator = titleTextCreator + axWindowsMediaPlayer1.currentMedia.name.Trim('\"').Trim(':').Trim();
+                    titleTextCreator = titleTextCreator + axMediaPlayer.currentMedia.name.Trim('\"').Trim(':').Trim();
 
-                    if (axWindowsMediaPlayer1.currentMedia.imageSourceWidth != 0 && !VerticalVideo && !IsRadio)
+                    if (axMediaPlayer.currentMedia.imageSourceWidth != 0 && !VerticalVideo && !IsRadio)
                     {
-                        titleTextCreator = titleTextCreator + " (" + axWindowsMediaPlayer1.currentMedia.imageSourceWidth + "X" + axWindowsMediaPlayer1.currentMedia.imageSourceHeight + ")";
+                        titleTextCreator = titleTextCreator + " (" + axMediaPlayer.currentMedia.imageSourceWidth + "X" + axMediaPlayer.currentMedia.imageSourceHeight + ")";
                     }
 
-                    if (!IsRadio && !string.IsNullOrWhiteSpace(axWindowsMediaPlayer1.Ctlcontrols.currentPositionString))
+                    if (!IsRadio && !string.IsNullOrWhiteSpace(axMediaPlayer.Ctlcontrols.currentPositionString))
                     {
-                        titleTextCreator = titleTextCreator + " " + axWindowsMediaPlayer1.Ctlcontrols.currentPositionString + "/" + axWindowsMediaPlayer1.currentMedia.durationString;
+                        titleTextCreator = titleTextCreator + " " + axMediaPlayer.Ctlcontrols.currentPositionString + "/" + axMediaPlayer.currentMedia.durationString;
                     }
 
                     await Task.Delay(40);

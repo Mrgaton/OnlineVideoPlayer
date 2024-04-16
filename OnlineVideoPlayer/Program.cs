@@ -1,19 +1,15 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static OnlineVideoPlayer.Program;
 using Application = System.Windows.Forms.Application;
 
 namespace OnlineVideoPlayer
@@ -42,13 +38,15 @@ namespace OnlineVideoPlayer
 
         public static string ProgramVersion = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
-        public static string VideoPlayerConfigPath = Program.arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetHash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
+        public static string VideoPlayerConfigPath = arguments.ToLower().Contains("/NoConfig") ? null : Path.Combine(Path.GetTempPath(), GetHash(Encoding.UTF8.GetBytes(ProgramVersion)) + TemporaryFilesExtension);
 
         public static string tempPath = Path.GetTempPath();
 
         [STAThread]
         private static void Main(string[] args)
         {
+            //args = ["https://gato.ovh/programs/ovp/preconfiguredlist/leageoflegendschampionsremix.ovp"];
+
             /*RegistryKey rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32");
 
             foreach (string keyName in rk.GetValueNames())
@@ -69,26 +67,29 @@ namespace OnlineVideoPlayer
 
             if (Environment.OSVersion.Version.Major >= 6) SetProcessDPIAware();
 
-            foreach (string path in args)
+            foreach (string arg in args)
             {
-                if (File.Exists(path))
+                if (File.Exists(arg))
                 {
-                    ConfigPath = path;
+                    ConfigPath = arg;
+                }
+                else if (Helper.IsHttpsLink(arg))
+                {
+                    VideoPlayer.ServerUrl = arg;
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(ConfigPath))
+            /*if (string.IsNullOrWhiteSpace(ConfigPath))
             {
                 string otherPath = arguments.Split(' ').Last();
 
                 if (File.Exists(otherPath) || Helper.IsHttpsLink(otherPath)) ConfigPath = otherPath.Trim();
-            }
+            }*/
 
-            if (!string.IsNullOrWhiteSpace(ConfigPath))
+            if (!string.IsNullOrWhiteSpace(ConfigPath) && File.Exists(ConfigPath))
             {
                 Directory.SetCurrentDirectory(new FileInfo(ConfigPath).Directory.FullName);
             }
-
 
             if (!string.IsNullOrWhiteSpace(ConfigPath) && Path.GetFullPath(ConfigPath).ToLower() != Path.GetFullPath(CurrentFilePath).ToLower()) ArgsCalled = true;
 
@@ -204,14 +205,11 @@ namespace OnlineVideoPlayer
 
         public class WindowsModificationsDetector
         {
-            [DllImport("kernel32.dll")]
-            private static extern int ResumeThread(IntPtr hThread);
+            [DllImport("kernel32.dll")] private static extern int ResumeThread(IntPtr hThread);
 
-            [DllImport("kernel32.dll")]
-            private static extern int SuspendThread(IntPtr hThread);
+            [DllImport("kernel32.dll")] private static extern int SuspendThread(IntPtr hThread);
 
-            [DllImport("kernel32.dll")]
-            private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+            [DllImport("kernel32.dll")] private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
             [Flags]
             public enum ThreadAccess : int
@@ -262,8 +260,8 @@ namespace OnlineVideoPlayer
                 SL_GEN_STATE_LAST = 3
             }
 
-            [DllImportAttribute("Slwga.dll", EntryPoint = "SLIsGenuineLocal", CharSet = CharSet.None, ExactSpelling = false, SetLastError = false, PreserveSig = true, CallingConvention = CallingConvention.Winapi, BestFitMapping = false, ThrowOnUnmappableChar = false)]
-            [PreserveSigAttribute()] private static extern uint SLIsGenuineLocal(ref Guid slid, [In, Out] ref SL_GENUINE_STATE genuineState, IntPtr val3);
+            [DllImport("Slwga.dll", EntryPoint = "SLIsGenuineLocal", CharSet = CharSet.None, ExactSpelling = false, SetLastError = false, PreserveSig = true, CallingConvention = CallingConvention.Winapi, BestFitMapping = false, ThrowOnUnmappableChar = false)]
+            [PreserveSig()] private static extern uint SLIsGenuineLocal(ref Guid slid, [In, Out] ref SL_GENUINE_STATE genuineState, IntPtr val3);
 
             private static bool Detected = false;
 
